@@ -1,0 +1,171 @@
+import { useContext, type ReactNode } from 'react';
+import { NumberInput } from './NumberInput';
+import { animateDetails } from './motion';
+import { SearchContext } from './search';
+
+interface NumberFieldProps {
+  label: ReactNode;
+  value: number;
+  onChange: (v: number) => void;
+  suffix?: string;
+  step?: number;
+  min?: number;
+  max?: number;
+  hint?: ReactNode;
+  slider?: boolean;
+  sliderMin?: number;
+  sliderMax?: number;
+  sliderStep?: number;
+  source?: string; // id da fonte (ver data/market.ts)
+  disabled?: boolean;
+}
+
+/** Campo numérico compacto, para usar dentro de listas */
+export function InlineNumber(props: { value: number; onChange: (v: number) => void; suffix: string; step?: number; min?: number; max?: number; label: string }) {
+  return <NumberInput {...props} className="inline-number" />;
+}
+
+export function NumberField(props: NumberFieldProps) {
+  const { label, value, onChange, suffix, step = 1, min, max, hint, slider, source, disabled } = props;
+
+  return (
+    <label className="field">
+      <span className="field-label">
+        {label}
+        {source && <SourceLink id={source} />}
+      </span>
+      <NumberInput value={value} onChange={onChange} step={step} min={min} max={max} suffix={suffix} disabled={disabled} />
+      {slider && (
+        <input
+          type="range"
+          min={props.sliderMin ?? min ?? 0}
+          max={props.sliderMax ?? max ?? 100}
+          step={props.sliderStep ?? step}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          aria-label={typeof label === 'string' ? label : undefined}
+        />
+      )}
+      {hint && <span className="hint">{hint}</span>}
+    </label>
+  );
+}
+
+export function SelectField<T extends string | number>(props: {
+  label: ReactNode;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+  hint?: ReactNode;
+  source?: string;
+}) {
+  return (
+    <label className="field">
+      <span className="field-label">
+        {props.label}
+        {props.source && <SourceLink id={props.source} />}
+      </span>
+      <span className="input-wrap">
+        <select
+          value={String(props.value)}
+          onChange={(e) => {
+            const opt = props.options.find((o) => String(o.value) === e.target.value);
+            if (opt) props.onChange(opt.value);
+          }}
+        >
+          {props.options.map((o) => (
+            <option key={String(o.value)} value={String(o.value)}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </span>
+      {props.hint && <span className="hint">{props.hint}</span>}
+    </label>
+  );
+}
+
+export function Segmented<T extends string | number>(props: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="seg" role="radiogroup">
+      {props.options.map((o) => (
+        <button
+          key={String(o.value)}
+          type="button"
+          role="radio"
+          aria-checked={o.value === props.value}
+          className={o.value === props.value ? 'on' : ''}
+          onClick={() => props.onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Check(props: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
+  return (
+    <label className="check">
+      <input type="checkbox" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
+      <span>{props.children}</span>
+    </label>
+  );
+}
+
+export function Section(props: { icon: ReactNode; title: string; keywords?: string; badge?: ReactNode; open?: boolean; children: ReactNode }) {
+  const query = useContext(SearchContext).trim();
+  return (
+    // Ao pesquisar, todas abrem (o painel esconde as que não correspondem); ao limpar voltam ao estado inicial
+    <details key={query ? 'search' : 'normal'} className="section" open={query ? true : props.open} data-keywords={`${props.title} ${props.keywords ?? ''}`}>
+      <summary
+        onClick={(e) => {
+          // Abre/fecha com animação em vez do salto nativo
+          e.preventDefault();
+          const d = e.currentTarget.parentElement as HTMLDetailsElement;
+          animateDetails(d, !d.open || d.classList.contains('is-closing'));
+        }}
+      >
+        <span className="sec-icon" aria-hidden>
+          {props.icon}
+        </span>
+        <span className="sec-head">
+          <span className="sec-title">{props.title}</span>
+          {/* A linha do selo existe sempre, para todas as secções terem a mesma altura */}
+          <span className="badge">{props.badge}</span>
+        </span>
+        <span className="chev" aria-hidden>
+          <svg viewBox="0 0 16 16" width="14" height="14">
+            <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </summary>
+      <div className="section-body">{props.children}</div>
+    </details>
+  );
+}
+
+export function SourceLink({ id }: { id: string }) {
+  return (
+    <a className="src" href={`#fonte-${id}`} title="Ver fonte" aria-label="Ver fonte" onClick={(e) => e.stopPropagation()}>
+      ⓘ
+    </a>
+  );
+}
+
+export function Alert(props: { kind: 'warn' | 'crit' | 'ok' | 'info'; children: ReactNode }) {
+  const icon = { warn: '!', crit: '×', ok: '✓', info: 'i' }[props.kind];
+  return (
+    <div className={`alert ${props.kind}`} role={props.kind === 'crit' ? 'alert' : undefined}>
+      <span className="a-icon" aria-hidden>
+        {icon}
+      </span>
+      <div>{props.children}</div>
+    </div>
+  );
+}

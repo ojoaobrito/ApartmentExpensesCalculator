@@ -1,0 +1,39 @@
+{
+  "name": "apartment-expenses-calculator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "cf:dev": "yarn build && wrangler pages dev --port 8788 --kv SCENARIOS",
+    "deploy": "yarn build && wrangler pages deploy --branch main",
+    "typecheck:functions": "tsc -p functions/tsconfig.json"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-is": "^19.3.0",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.147.0"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "packageManager": "yarn@4.5.3",
+  "description": "Simulador de compra de casa e crédito à habitação em Portugal"
+}

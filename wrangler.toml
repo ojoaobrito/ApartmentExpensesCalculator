@@ -1,0 +1,9 @@
+# Cloudflare Pages — ver README ("Deploy")
+name = "simulador-casa"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-01"
+
+[[kv_namespaces]]
+binding = "SCENARIOS"
+# Criado com: yarn wrangler kv namespace create SCENARIOS
+id = "fd18f345255946e28d9595c947355e99"

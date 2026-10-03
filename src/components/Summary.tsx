@@ -1,0 +1,308 @@
+import type React from 'react';
+import type { Inputs } from '../state';
+import { EFFORT_LABEL, type Model } from '../model';
+import { heroColors, METER_MAX, meterGradient } from '../lib/effortColor';
+
+/** Gradiente do cartão principal conforme o esforço (variáveis CSS) */
+function heroStyle(m: Model) {
+  const c = heroColors(m.effortStatus === 'none' ? null : m.effortTotal);
+  return { '--hero-solid': c.solid, '--hero-ink': c.ink } as React.CSSProperties;
+}
+import { RULES } from '../data/market';
+import { duration, eur, eurC, pct } from '../lib/format';
+import { Alert } from './ui';
+
+export function Kpis({ m, i }: { m: Model; i: Inputs }) {
+  const w = m.withExtras;
+  return (
+    <div className="kpis">
+      <div className={`kpi hero status-${m.effortStatus}`} style={heroStyle(m)}>
+        <div className="k-label">{m.extraMonthlyEquivalent > 0 ? 'Total por mês (casa + amortizações)' : 'Total da casa por mês'}</div>
+        <div className="k-value">{eurC(m.monthlyTotal + m.extraMonthlyEquivalent)}</div>
+        <div className="hero-status">
+          <span className="hero-badge">{EFFORT_LABEL[m.effortStatus]}</span>
+          {m.effortStatus !== 'none' && (
+            <span>
+              {pct(m.effortTotal, 0)} do rendimento · {m.monthlySpare >= 0 ? `sobram ${eur(m.monthlySpare)}/mês` : `faltam ${eur(-m.monthlySpare)}/mês`}
+            </span>
+          )}
+        </div>
+        {m.effortStatus !== 'none' && (
+          <div className="hero-meter" style={{ background: meterGradient() }} title="Esforço total: 0% → 120% do rendimento">
+            <span style={{ left: `${(Math.min(m.effortTotal, METER_MAX) / METER_MAX) * 100}%` }} />
+          </div>
+        )}
+        <div className="hero-rows">
+          {m.monthly
+            .filter((c) => c.value > 0 || c.key === 'imi')
+            .map((c) => (
+              <div key={c.key} className="hero-row">
+                <span>{c.key === 'prestacao' ? `Prestação · TAN ${pct(m.firstTan)}` : c.key === 'imi' ? 'IMI' : c.label}</span>
+                <b>{c.key === 'imi' && c.value === 0 ? `isento ${i.imiExemptionYears} anos` : eurC(c.value)}</b>
+              </div>
+            ))}
+          {m.extraMonthlyEquivalent > 0 && (
+            <div className="hero-row">
+              <span>Amortizações (média{m.params.extraPlan.enabled && m.params.extraPlan.amount > 0 ? ` de ${eur(m.params.extraPlan.amount)}${{ 1: '/mês', 3: '/trim.', 6: '/sem.', 12: '/ano' }[m.params.extraPlan.everyMonths] ?? ''}` : ''})</span>
+              <b>{eurC(m.extraMonthlyEquivalent)}</b>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="kpi">
+        <div className="k-label">Dinheiro na escritura</div>
+        <div className="k-value">{eur(m.cashNeeded)}</div>
+        <div className="k-sub">
+          Entrada {eur(m.downPayment)} + custos {eur(m.upfrontTotal)}
+        </div>
+      </div>
+      <div className="kpi">
+        <div className="k-label">Fica de reserva</div>
+        <div className="k-value" style={m.cashLeft < 0 ? { color: 'var(--crit)' } : undefined}>
+          {m.cashLeft >= 0 ? eur(m.cashLeft) : `−${eur(-m.cashLeft)}`}
+        </div>
+        <div className="k-sub">
+          Liquidez{m.investmentsLeft > 0 ? ` + ${eur(m.investmentsLeft)} ainda investidos` : ''}
+        </div>
+      </div>
+      <div className="kpi">
+        <div className="k-label">Crédito liquidado em</div>
+        <div className="k-value">{duration(w.payoffMonth)}</div>
+        <div className="k-sub">
+          {i.goalEnabled ? `Objetivo: ${i.targetYears} anos · ` : ''}crédito de {eur(m.principal)} (LTV {m.ltv.toFixed(0)}%) · contrato {i.termYears} anos
+        </div>
+      </div>
+      <div className="kpi">
+        <div className="k-label">Juros totais</div>
+        <div className="k-value">{eur(w.totalInterest)}</div>
+        <div className="k-sub">{m.interestSaved > 1 ? `Poupas ${eur(m.interestSaved)} vs não amortizar` : 'Sem amortizações antecipadas'}</div>
+      </div>
+      <div className="kpi">
+        <div className="k-label">Custo total da compra</div>
+        <div className="k-value">{eur(m.downPayment + m.upfrontTotal + w.totalOutflow)}</div>
+        <div className="k-sub">TAEG {pct(m.taeg)} · entrada, custos, juros, seguros</div>
+      </div>
+      <div className="kpi">
+        <div className="k-label">Taxa de esforço</div>
+        <div className="k-value">{i.netMonthlyIncome > 0 ? pct(m.dsti, 1) : '—'}</div>
+        <div className="k-sub">
+          {i.netMonthlyIncome > 0 ? `Stress test: ${pct(m.dstiStress, 1)} (máx. ${RULES.dstiLimit}%)` : 'Indica o rendimento'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Alerts({ m }: { m: Model }) {
+  if (!m.alerts.length)
+    return (
+      <div className="alerts">
+        <Alert kind="ok">Tudo dentro das regras do Banco de Portugal e com o fundo de emergência intacto.</Alert>
+      </div>
+    );
+  return (
+    <div className="alerts">
+      {m.alerts.map((a, idx) => (
+        <Alert key={idx} kind={a.kind}>
+          {a.text}
+        </Alert>
+      ))}
+    </div>
+  );
+}
+
+export function SummaryTab({ m, i }: { m: Model; i: Inputs }) {
+  const w = m.withExtras;
+  const plan = m.params.extraPlan;
+  const freq = { 1: 'por mês', 3: 'por trimestre', 6: 'por semestre', 12: 'por ano' }[plan.everyMonths] ?? `a cada ${plan.everyMonths} meses`;
+
+  return (
+    <div className="grid2">
+      <div className="card">
+        <h2>Dinheiro no dia da escritura</h2>
+        <div className="card-sub">Entrada + impostos + custos, e de onde vem o dinheiro.</div>
+        <table className="kv">
+          <tbody>
+            <tr>
+              <td>
+                Entrada ({pct((m.downPayment / i.price) * 100, 1)} do preço · LTV {pct(m.ltv, 1)})
+                {m.autoDownPayment && <span className="note">Automática: todo o capital disponível</span>}
+              </td>
+              <td>{eur(m.downPayment)}</td>
+            </tr>
+            {m.upfront.map((c) => (
+              <tr key={c.key}>
+                <td>
+                  {c.label}
+                  {c.note && <span className="note">{c.note}</span>}
+                </td>
+                <td>{eurC(c.value)}</td>
+              </tr>
+            ))}
+            <tr className="total">
+              <td>Total necessário</td>
+              <td>{eur(m.cashNeeded)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table className="kv" style={{ marginTop: 16 }}>
+          <tbody>
+            <tr>
+              <td>Poupança disponível</td>
+              <td>{eur(i.cash)}</td>
+            </tr>
+            {i.investmentsUsed > 0 && (
+              <tr>
+                <td>
+                  Investimentos resgatados
+                  <span className="note">Menos {eur(m.investmentsTax)} de imposto sobre mais-valias</span>
+                </td>
+                <td>{eur(i.investmentsUsed - m.investmentsTax)}</td>
+              </tr>
+            )}
+            <tr className="total">
+              <td>Liquidez depois da escritura</td>
+              <td style={{ color: m.cashLeft < 0 ? 'var(--crit)' : undefined }}>{eur(m.cashLeft)}</td>
+            </tr>
+            <tr>
+              <td>Investimentos que continuam aplicados</td>
+              <td>{eur(m.investmentsLeft)}</td>
+            </tr>
+          </tbody>
+        </table>
+        {m.youngSavings > 0 && (
+          <p className="small muted" style={{ marginBottom: 0 }}>
+            O IMT Jovem poupa-te <b>{eur(m.youngSavings)}</b> (IMT {eur(m.taxes.imtWithoutBenefit)} + IS {eur(m.taxes.stampWithoutBenefit)} + emolumentos).
+          </p>
+        )}
+      </div>
+
+      <div className="card">
+        <h2>Encargos mensais</h2>
+        <div className="card-sub">No primeiro mês. A prestação muda com as revisões da Euribor.</div>
+        <table className="kv">
+          <tbody>
+            {m.monthly.map((c) => (
+              <tr key={c.key}>
+                <td>{c.label}</td>
+                <td>{eurC(c.value)}</td>
+              </tr>
+            ))}
+            <tr className="total">
+              <td>Total da casa por mês</td>
+              <td>{eurC(m.monthlyTotal)}</td>
+            </tr>
+            {m.extraMonthlyEquivalent > 0 && (
+              <tr>
+                <td>
+                  + Amortizações antecipadas (média mensal)
+                  <span className="note">
+                    {plan.enabled && plan.amount > 0 ? `${eur(plan.amount)} ${freq}` : ''}
+                    {i.lumpSums.length ? ` + ${i.lumpSums.length} pontual(is)` : ''}
+                  </span>
+                </td>
+                <td>{eurC(m.extraMonthlyEquivalent)}</td>
+              </tr>
+            )}
+            {m.extraMonthlyEquivalent > 0 && (
+              <tr className="total">
+                <td>Esforço mensal total</td>
+                <td>{eurC(m.monthlyTotal + m.extraMonthlyEquivalent)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {i.netMonthlyIncome > 0 && (
+          <>
+            <div style={{ marginTop: 14 }} className="small muted">
+              Taxa de esforço do crédito: <b style={{ color: 'var(--text)' }}>{pct(m.dsti, 1)}</b> ({pct(m.dstiStress, 1)} com stress test de +{m.stressPp.toFixed(2).replace('.', ',')} p.p., prestação {eurC(m.stressedPayment)})
+              {m.extraMonthlyEquivalent > 0 && (
+                <>
+                  {' '}· com casa + amortizações voluntárias: <b style={{ color: 'var(--text)' }}>{pct(m.effortTotal, 1)}</b> do rendimento
+                </>
+              )}
+            </div>
+            <EffortBar mandatory={m.dstiStress} total={m.effortTotal} />
+          </>
+        )}
+      </div>
+
+      <div className="card">
+        <h2>Para onde vai o dinheiro</h2>
+        <div className="card-sub">Ao longo de toda a vida do crédito, com o teu plano.</div>
+        <CostBreakdown
+          items={[
+            { label: 'Preço do imóvel', value: i.price, color: 'var(--s1)' },
+            { label: 'Juros', value: w.totalInterest, color: 'var(--s2)' },
+            { label: 'Impostos e custos iniciais', value: m.upfrontTotal - i.worksAndFurniture - i.furnishing, color: 'var(--s3)' },
+            { label: 'Obras, decoração e recheio', value: i.worksAndFurniture + i.furnishing, color: 'var(--s7)' },
+            { label: 'Seguros', value: w.totalInsurance, color: 'var(--s4)' },
+            { label: 'Comissões (amortização e mensais)', value: w.totalExtraFees + w.totalBankFees, color: 'var(--s5)' },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+function EffortBar({ mandatory, total }: { mandatory: number; total: number }) {
+  const max = 100;
+  const color = mandatory > RULES.dstiLimit ? 'var(--crit)' : mandatory > RULES.dstiComfort ? 'var(--warn)' : 'var(--good)';
+  const w = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div className="bar-track" style={{ position: 'relative' }}>
+        <div title="Taxa de esforço com stress test" style={{ width: w(mandatory), background: color }} />
+        <div
+          title="Restantes encargos da casa e amortizações voluntárias"
+          style={{ width: w(total - mandatory), background: 'repeating-linear-gradient(135deg, var(--accent) 0 3px, transparent 3px 6px)', opacity: 0.6 }}
+        />
+        <span style={{ position: 'absolute', left: w(RULES.dstiLimit), top: -3, bottom: -3, width: 2, background: 'var(--text)' }} />
+      </div>
+      <div className="small muted" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 6 }}>
+        <span>
+          <i style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: color, marginRight: 6 }} />
+          Crédito com stress test
+        </span>
+        <span>
+          <i style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: 'repeating-linear-gradient(135deg, var(--accent) 0 2px, transparent 2px 4px)', marginRight: 6 }} />
+          Outros encargos + amortizações
+        </span>
+        <span>▏ limite BdP {RULES.dstiLimit}%</span>
+      </div>
+    </div>
+  );
+}
+
+function CostBreakdown({ items }: { items: { label: string; value: number; color: string }[] }) {
+  const shown = items.filter((x) => x.value > 0.5);
+  const total = shown.reduce((a, x) => a + x.value, 0);
+  return (
+    <>
+      <div className="bar-track" style={{ height: 22, borderRadius: 6 }}>
+        {shown.map((x) => (
+          <div key={x.label} title={`${x.label}: ${eur(x.value)}`} style={{ width: `${(x.value / total) * 100}%`, background: x.color }} />
+        ))}
+      </div>
+      <table className="kv" style={{ marginTop: 12 }}>
+        <tbody>
+          {shown.map((x) => (
+            <tr key={x.label}>
+              <td>
+                <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: x.color, marginRight: 8 }} />
+                {x.label}
+              </td>
+              <td>
+                {eur(x.value)} <span className="muted small">({pct((x.value / total) * 100, 1)})</span>
+              </td>
+            </tr>
+          ))}
+          <tr className="total">
+            <td>Total</td>
+            <td>{eur(total)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  );
+}
