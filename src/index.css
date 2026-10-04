@@ -230,7 +230,6 @@ input[type='range'] { width: 100%; accent-color: var(--accent); margin: 2px 0 0;
 .tabs { position: relative; display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; box-shadow: inset 0 -1px 0 var(--border); }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button { border: 0; background: transparent; padding: 10px 14px 12px; font-size: 14px; color: var(--text-2); white-space: nowrap; transition: color 0.15s; }
-.tabs button:hover { color: var(--text); }
 .tabs button.on { color: var(--accent); font-weight: 600; }
 /* Sublinhado que desliza até ao separador ativo */
 .tab-indicator { position: absolute; bottom: 0; left: 0; height: 2px; border-radius: 2px; background: var(--accent); transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), width 0.28s cubic-bezier(0.2, 0.7, 0.2, 1); pointer-events: none; }
@@ -362,4 +361,6 @@ body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, col
 /* Separadores com ícone */
 .tabs button { display: inline-flex; align-items: center; gap: 8px; }
 .tab-icon { display: grid; place-items: center; color: var(--text-3); transition: color 0.15s; }
-.tabs button.on .tab-icon, .tabs button:hover .tab-icon { color: var(--accent); }
+.tabs button.on .tab-icon { color: var(--accent); }
+/* Hover num separador inativo: texto e ícone a branco, ligeiramente translúcidos */
+.tabs button:not(.on):hover, .tabs button:not(.on):hover .tab-icon { color: color-mix(in srgb, var(--text) 78%, transparent); }
