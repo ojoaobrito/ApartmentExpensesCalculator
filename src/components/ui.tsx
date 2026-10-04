@@ -3,6 +3,7 @@ import { ChevronRight, CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-
 import { NumberInput } from './NumberInput';
 import { animateDetails } from './motion';
 import { SearchContext } from './search';
+import { Skeleton } from './Skeleton';
 
 interface NumberFieldProps {
   label: ReactNode;
@@ -19,6 +20,8 @@ interface NumberFieldProps {
   sliderStep?: number;
   source?: string; // id da fonte (ver data/market.ts)
   disabled?: boolean;
+  /** Valor ainda a chegar (mostra um esqueleto no lugar do campo) */
+  loading?: boolean;
 }
 
 /** Campo numérico compacto, para usar dentro de listas */
@@ -27,7 +30,7 @@ export function InlineNumber(props: { value: number; onChange: (v: number) => vo
 }
 
 export function NumberField(props: NumberFieldProps) {
-  const { label, value, onChange, suffix, step = 1, min, max, hint, slider, source, disabled } = props;
+  const { label, value, onChange, suffix, step = 1, min, max, hint, slider, source, disabled, loading } = props;
 
   return (
     <label className="field">
@@ -35,8 +38,8 @@ export function NumberField(props: NumberFieldProps) {
         {label}
         {source && <SourceLink id={source} />}
       </span>
-      <NumberInput value={value} onChange={onChange} step={step} min={min} max={max} suffix={suffix} disabled={disabled} />
-      {slider && (
+      {loading ? <Skeleton h={36} r={8} /> : <NumberInput value={value} onChange={onChange} step={step} min={min} max={max} suffix={suffix} disabled={disabled} />}
+      {slider && !loading && (
         <input
           type="range"
           min={props.sliderMin ?? min ?? 0}
@@ -48,7 +51,7 @@ export function NumberField(props: NumberFieldProps) {
           aria-label={typeof label === 'string' ? label : undefined}
         />
       )}
-      {hint && <span className="hint">{hint}</span>}
+      {hint && (loading ? <Skeleton w="80%" h={9} style={{ marginTop: 4 }} /> : <span className="hint">{hint}</span>)}
     </label>
   );
 }
@@ -119,7 +122,7 @@ export function Check(props: { checked: boolean; onChange: (v: boolean) => void;
   );
 }
 
-export function Section(props: { icon: ReactNode; title: string; keywords?: string; badge?: ReactNode; open?: boolean; children: ReactNode }) {
+export function Section(props: { icon: ReactNode; title: string; keywords?: string; badge?: ReactNode; open?: boolean; loading?: boolean; children: ReactNode }) {
   const query = useContext(SearchContext).trim();
   return (
     // Ao pesquisar, todas abrem (o painel esconde as que não correspondem); ao limpar voltam ao estado inicial
@@ -138,7 +141,7 @@ export function Section(props: { icon: ReactNode; title: string; keywords?: stri
         <span className="sec-head">
           <span className="sec-title">{props.title}</span>
           {/* A linha do selo existe sempre, para todas as secções terem a mesma altura */}
-          <span className="badge">{props.badge}</span>
+          <span className="badge">{props.loading ? <Skeleton w={78} h={19} r={999} /> : props.badge}</span>
         </span>
         <span className="chev" aria-hidden>
           <ChevronRight size={16} strokeWidth={2.2} />

@@ -6,6 +6,7 @@ import { eur } from '../lib/format';
 import { Check, InlineNumber, Section } from './ui';
 import { IconCart } from './icons';
 import { FINANCE_APP_URL } from '../financeSync';
+import { Skeleton } from './Skeleton';
 
 interface Props {
   inputs: Inputs;
@@ -13,12 +14,14 @@ interface Props {
   model: Model;
   keywords: string;
   synced?: boolean;
+  /** Despesas ainda a chegar da app de Finanças */
+  loading?: boolean;
 }
 
 /** "mensal" ou "anual-<mês>" num só seletor, para caber numa linha */
 const freqValue = (c: LivingCost) => (c.frequency === 'mensal' ? 'mensal' : `anual-${c.month ?? 1}`);
 
-export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced }: Props) {
+export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced, loading }: Props) {
   const items = i.livingCosts;
   const update = (id: string, p: Partial<LivingCost>) => set('livingCosts', items.map((c) => (c.id === id ? { ...c, ...p } : c)));
   const remove = (id: string) => set('livingCosts', items.filter((c) => c.id !== id));
@@ -39,6 +42,7 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced 
       icon={<IconCart />}
       title="Despesas do dia a dia"
       keywords={keywords}
+      loading={loading && i.livingCostsEnabled}
       badge={<span className="pill">{i.livingCostsEnabled && live ? `${eur(live.expensesMonthly)}/mês` : 'Opcional · desligado'}</span>}
     >
       <Check checked={i.livingCostsEnabled} onChange={(v) => set('livingCostsEnabled', v)}>
@@ -62,7 +66,18 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced 
         </span>
       )}
 
-      {i.livingCostsEnabled && (
+      {i.livingCostsEnabled && loading && (
+        <div className="living-skel" aria-busy="true" aria-label="A carregar as despesas da app de Finanças">
+          <Skeleton h={52} r={10} />
+          {[0, 1, 2, 3, 4, 5].map((k) => (
+            <div key={k} className="skel-kv">
+              <Skeleton w={['46%', '38%', '52%', '30%', '44%', '36%'][k]} h={10} />
+              <Skeleton w={56} h={10} />
+            </div>
+          ))}
+        </div>
+      )}
+      {i.livingCostsEnabled && !loading && (
         <>
           {live && (
             <div className="living-totals">

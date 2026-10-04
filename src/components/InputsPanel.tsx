@@ -13,6 +13,7 @@ import { animateDetails } from './motion';
 import { IconArrowDownCircle, IconBank, IconHome, IconPie, IconReceipt, IconSearch, IconTrend, IconUmbrella, IconWallet } from './icons';
 import { translateEuriborPath } from '../lib/loan';
 import { applySearch, SearchContext } from './search';
+import { Skeleton } from './Skeleton';
 
 interface Props {
   finance: FinanceSync;
@@ -53,6 +54,8 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
   const asideRef = useRef<HTMLElement>(null);
   useScrollFade(asideRef);
   const emptyRef = useRef<HTMLDivElement>(null);
+  // Valores da app de Finanças ainda a chegar: esqueletos no que depende deles
+  const pending = i.useFinanceData && finance.status === 'loading';
 
   // Filtra secções, destaca os campos encontrados e faz scroll até ao primeiro
   useLayoutEffect(() => {
@@ -206,12 +209,13 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
         title="Capitais próprios e entrada"
         keywords={SECTION_KEYWORDS.capitais}
         open
+        loading={pending}
         badge={<span className={`pill ${m.cashLeft < 0 ? 'crit' : m.cashLeft < i.emergencyReserve ? 'warn' : 'good'}`}>LTV {m.ltv.toFixed(0)}%</span>}
       >
         <FinanceLink finance={finance} synced={synced} on={i.useFinanceData} setOn={(v) => set('useFinanceData', v)} />
         <div className="row2">
-          <NumberField label="Poupança (liquidez)" value={i.cash} onChange={(v) => set('cash', v)} suffix="€" step={1000} min={0} disabled={synced} hint={synced ? 'Da app de Finanças' : undefined} />
-          <NumberField label="Investimentos" value={i.investments} onChange={(v) => patch({ investments: v, investmentsUsed: Math.min(i.investmentsUsed, v) })} suffix="€" step={1000} min={0} disabled={synced} hint={synced ? 'Da app de Finanças' : undefined} />
+          <NumberField label="Poupança (liquidez)" value={i.cash} onChange={(v) => set('cash', v)} suffix="€" step={1000} min={0} disabled={synced} loading={pending} hint={synced ? 'Da app de Finanças' : undefined} />
+          <NumberField label="Investimentos" value={i.investments} onChange={(v) => patch({ investments: v, investmentsUsed: Math.min(i.investmentsUsed, v) })} suffix="€" step={1000} min={0} disabled={synced} loading={pending} hint={synced ? 'Da app de Finanças' : undefined} />
         </div>
         <NumberField
           label="Investimentos a resgatar para a compra"
@@ -224,7 +228,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
           hint={m.investmentsTax > 0 ? `Imposto estimado sobre mais-valias ao resgatar: ${eur(m.investmentsTax)}` : undefined}
         />
         <div className="row2">
-          <NumberField label="Mais-valia latente" value={i.investmentsGainPct} onChange={(v) => set('investmentsGainPct', v)} suffix="% do valor" step={1} min={0} max={100} disabled={i.investmentsUsed === 0 || synced} hint={synced ? 'Calculado a partir das mais-valias tributáveis' : i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : `Imposto de ${pct(i.capitalGainsTaxPct, 0)} sobre o ganho`} />
+          <NumberField label="Mais-valia latente" value={i.investmentsGainPct} onChange={(v) => set('investmentsGainPct', v)} suffix="% do valor" step={1} min={0} max={100} disabled={i.investmentsUsed === 0 || synced} loading={pending} hint={synced ? 'Calculado a partir das mais-valias tributáveis' : i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : `Imposto de ${pct(i.capitalGainsTaxPct, 0)} sobre o ganho`} />
           <NumberField label="Fundo de emergência" value={i.emergencyReserve} onChange={(v) => set('emergencyReserve', v)} suffix="€" step={1000} min={0} />
         </div>
         <NumberField
@@ -236,7 +240,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
           min={0}
           hint="Móveis, eletrodomésticos em falta, cortinados, iluminação… Sai da poupança antes da entrada."
         />
-        <AvailableBreakdown i={i} m={m} set={set} />
+        {pending ? <Skeleton h={190} r={10} /> : <AvailableBreakdown i={i} m={m} set={set} />}
         <Segmented
           value={i.autoDownPayment ? 'auto' : 'manual'}
           onChange={(v) => patch(v === 'auto' ? { autoDownPayment: true } : { autoDownPayment: false, downPayment: Math.round(m.downPayment) })}
@@ -250,6 +254,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
           value={i.autoDownPayment ? Math.round(m.downPayment) : i.downPayment}
           onChange={(v) => patch({ autoDownPayment: false, downPayment: v })}
           disabled={i.autoDownPayment}
+          loading={pending && i.autoDownPayment}
           suffix="€"
           step={1000}
           min={0}
@@ -408,7 +413,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       )}
 
       {/* ---------------- CUSTOS DE AQUISIÇÃO ---------------- */}
-      <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} badge={<span className="pill" title="Impostos, escritura e comissões (sem obras nem recheio)">{eur(m.upfrontTotal - i.worksAndFurniture - i.furnishing)}</span>}>
+      <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} loading={pending} badge={<span className="pill" title="Impostos, escritura e comissões (sem obras nem recheio)">{eur(m.upfrontTotal - i.worksAndFurniture - i.furnishing)}</span>}>
         <div className="row2">
           <NumberField
             label="Escritura + registos"
@@ -576,7 +581,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       </Section>
 
       {/* ---------------- SEGUROS ---------------- */}
-      <Section icon={<IconUmbrella />} title="Seguros e encargos do crédito" keywords={SECTION_KEYWORDS.seguros} badge={<span className="pill">{eur(m.monthly.filter((x) => ['vida', 'multirriscos', 'comissao'].includes(x.key)).reduce((a, x) => a + x.value, 0))}/mês</span>}>
+      <Section icon={<IconUmbrella />} title="Seguros e encargos do crédito" keywords={SECTION_KEYWORDS.seguros} loading={pending} badge={<span className="pill">{eur(m.monthly.filter((x) => ['vida', 'multirriscos', 'comissao'].includes(x.key)).reduce((a, x) => a + x.value, 0))}/mês</span>}>
         <NumberField
           label="Seguro de vida (% anual do capital em dívida)"
           value={i.lifeInsurancePct}
@@ -598,6 +603,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
         icon={<IconPie />}
         title="Rendimento e taxa de esforço"
         keywords={SECTION_KEYWORDS.rendimento}
+        loading={pending}
         badge={i.netMonthlyIncome > 0 ? <span className={`pill ${EFFORT_PILL[m.effortStatus]}`} title="Esforço total: casa + amortizações + outras dívidas">{m.effortTotal.toFixed(0)}% do rendimento</span> : undefined}
       >
         <div className="row2">
@@ -629,7 +635,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       </Section>
 
       {/* ---------------- DESPESAS DO DIA A DIA ---------------- */}
-      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} />
+      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} loading={pending} />
       </SearchContext.Provider>
     </aside>
   );
@@ -746,7 +752,14 @@ function AvailableBreakdown({ i, m, set }: { i: Inputs; m: Model; set: Props['se
 /** Estado da ligação à app de Finanças (no topo dos capitais próprios) */
 function FinanceLink({ finance, synced, on, setOn }: { finance: FinanceSync; synced: boolean; on: boolean; setOn: (v: boolean) => void }) {
   // Em desenvolvimento (sem API) não mostra nada
-  if (finance.status === 'loading' || (finance.status === 'unavailable' && finance.reason === 'no_api')) return null;
+  if (finance.status === 'loading')
+    return on ? (
+      <div className="finance-link" aria-busy="true" aria-label="A ligar à app de Finanças">
+        <Skeleton w="62%" h={12} style={{ margin: '2px 0' }} />
+        <Skeleton w="88%" h={10} />
+      </div>
+    ) : null;
+  if (finance.status === 'unavailable' && finance.reason === 'no_api') return null;
   if (finance.status === 'unavailable')
     return (
       <div className="finance-link off">

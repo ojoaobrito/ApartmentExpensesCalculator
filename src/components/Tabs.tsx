@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Skeleton } from './Skeleton';
 import { X } from 'lucide-react';
 import { withDefaults, type Inputs } from '../state';
 import { exportScenarios, parseScenarioFile, type SavedScenario, type useScenarios } from '../storage';
@@ -121,7 +122,7 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
           <h2 style={{ flex: 1 }}>Gravar cenário</h2>
-          <span className={`pill ${status.cls}`}>{status.text}</span>
+          {store.mode === 'loading' ? <Skeleton w={260} h={19} r={999} /> : <span className={`pill ${status.cls}`}>{status.text}</span>}
         </div>
         <div className="card-sub">Grava a simulação atual para a comparares com outras — p.ex. variável vs mista, ou entrada maior vs amortizar.</div>
         {store.mode === 'locked' && (
@@ -158,7 +159,17 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
         {store.error && <p className="small" style={{ color: 'var(--crit)', marginBottom: 0 }}>{store.error}</p>}
 
         <div className="scenarios-list" style={{ marginTop: 14 }}>
-          {store.list.length === 0 && <div className="empty">Ainda não tens cenários gravados.</div>}
+          {store.list.length === 0 && store.mode === 'loading' && (
+            <div aria-busy="true" aria-label="A carregar os cenários">
+              {[0, 1, 2].map((k) => (
+                <div key={k} className="skel-kv" style={{ padding: '12px 0' }}>
+                  <Skeleton w={['42%', '30%', '50%'][k]} h={12} />
+                  <Skeleton w={180} h={24} r={8} />
+                </div>
+              ))}
+            </div>
+          )}
+          {store.list.length === 0 && store.mode !== 'loading' && <div className="empty">Ainda não tens cenários gravados.</div>}
           {store.list.map((s) => (
             <div key={s.id} className="scenario-item">
               <span className="name">{s.name}</span>

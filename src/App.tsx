@@ -11,6 +11,8 @@ import { InputsPanel } from './components/InputsPanel';
 import { Alerts, Kpis, SummaryTab } from './components/Summary';
 import { ScheduleTable } from './components/ScheduleTable';
 import { ChartsTab, ScenariosTab, SourcesTab } from './components/Tabs';
+import { AlertsSkeleton, KpisSkeleton, PanelSkeleton } from './components/LoadingSkeletons';
+import { Skeleton } from './components/Skeleton';
 
 type Tab = 'resumo' | 'graficos' | 'tabela' | 'cenarios' | 'fontes';
 const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
@@ -29,6 +31,8 @@ export default function App() {
   const finance = useFinanceSync();
   // Com a app de Finanças ligada, os capitais próprios e as despesas vêm de lá
   const synced = inputs.useFinanceData && finance.status === 'ready';
+  // Enquanto os valores da app de Finanças chegam, os números ficam em esqueleto (não saltam)
+  const pending = inputs.useFinanceData && finance.status === 'loading';
   const effective = useMemo(() => (synced && finance.data ? applyFinance(inputs, finance.data) : inputs), [synced, finance, inputs]);
   const model = useMemo(() => compute(effective), [effective]);
   const [tab, setTabState] = useState<Tab>('resumo');
@@ -110,7 +114,7 @@ export default function App() {
         </div>
         <button
           className="btn primary"
-          disabled={exporting}
+          disabled={exporting || pending}
           onClick={async () => {
             setExporting(true);
             try {
@@ -136,21 +140,36 @@ export default function App() {
       </header>
 
       <div className="mobile-bar" aria-hidden>
-        <span>
-          <b>{eurC(model.withExtras.firstPayment)}</b>/mês
-        </span>
-        <span>
-          Liquidado em <b>{duration(model.withExtras.payoffMonth)}</b>
-        </span>
-        <span>
-          Juros <b>{eur(model.withExtras.totalInterest)}</b>
-        </span>
+        {pending ? (
+          [0, 1, 2].map((k) => <Skeleton key={k} w={90} h={12} />)
+        ) : (
+          <>
+            <span>
+              <b>{eurC(model.withExtras.firstPayment)}</b>/mês
+            </span>
+            <span>
+              Liquidado em <b>{duration(model.withExtras.payoffMonth)}</b>
+            </span>
+            <span>
+              Juros <b>{eur(model.withExtras.totalInterest)}</b>
+            </span>
+          </>
+        )}
       </div>
       <div className="layout">
         <InputsPanel inputs={effective} set={set} patch={patch} model={model} finance={finance} synced={synced} />
         <main className="results" ref={resultsRef}>
-          <Kpis m={model} i={effective} />
-          <Alerts m={model} />
+          {pending ? (
+            <>
+              <KpisSkeleton />
+              <AlertsSkeleton />
+            </>
+          ) : (
+            <div className="skel-done results-top">
+              <Kpis m={model} i={effective} />
+              <Alerts m={model} />
+            </div>
+          )}
           <nav className="tabs" role="tablist" ref={navRef}>
             {TABS.map((t) => (
               <button
@@ -172,9 +191,10 @@ export default function App() {
             <span className="tab-indicator" ref={indicatorRef} aria-hidden />
           </nav>
           <div className="tab-panel" key={tab} data-dir={tabDir} role="tabpanel">
-          {tab === 'resumo' && <SummaryTab m={model} i={effective} />}
-          {tab === 'graficos' && <ChartsTab m={model} />}
-          {tab === 'tabela' && <ScheduleTable result={model.withExtras} />}
+          {pending && (tab === 'resumo' || tab === 'graficos' || tab === 'tabela') && <PanelSkeleton />}
+          {!pending && tab === 'resumo' && <SummaryTab m={model} i={effective} />}
+          {!pending && tab === 'graficos' && <ChartsTab m={model} />}
+          {!pending && tab === 'tabela' && <ScheduleTable result={model.withExtras} />}
           {tab === 'cenarios' && (
             <ScenariosTab inputs={effective} model={model} store={scenarios} onLoad={(s) => replace(withDefaults(s.inputs))} />
           )}

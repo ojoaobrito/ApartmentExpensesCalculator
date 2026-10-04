@@ -364,3 +364,22 @@ body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, col
 .tabs button.on .tab-icon { color: var(--accent); }
 /* Hover num separador inativo: texto e ícone a branco, ligeiramente translúcidos */
 .tabs button:not(.on):hover, .tabs button:not(.on):hover .tab-icon { color: color-mix(in srgb, var(--text) 78%, transparent); }
+
+/* Esqueletos de carregamento (partilhados pelas duas apps) */
+.skel { display: block; flex: none; max-width: 100%; background: linear-gradient(90deg, var(--skel) 0%, var(--skel-hi) 50%, var(--skel) 100%) 0 0 / 200% 100% var(--skel); animation: skel-shine 1.4s ease-in-out infinite; }
+.skel-lines { display: flex; flex-direction: column; width: 100%; }
+.skel-zone { animation: skel-in 0.25s ease both; }
+:root { --skel: color-mix(in srgb, var(--text) 7%, var(--surface)); --skel-hi: color-mix(in srgb, var(--text) 13%, var(--surface)); }
+@keyframes skel-shine { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes skel-in { from { opacity: 0; } }
+/* O conteúdo verdadeiro entra suavemente quando substitui o esqueleto */
+.skel-done { animation: skel-in 0.3s ease both; }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } .skel-zone, .skel-done { animation: none; } }
+.skel-kv { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 0; }
+.skel-kv + .skel-kv { border-top: 1px solid var(--border); }
+.results-top { display: flex; flex-direction: column; gap: 16px; }
+.living-skel { display: flex; flex-direction: column; gap: 4px; }
+.skel-hero { --hero-solid: var(--text-3); }
+.kpis.skel-zone .kpi:not(.hero) { min-height: 150px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.mobile-bar .skel { --skel: rgb(255 255 255 / 0.22); --skel-hi: rgb(255 255 255 / 0.4); }
