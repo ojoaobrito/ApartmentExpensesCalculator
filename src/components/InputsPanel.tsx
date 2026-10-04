@@ -122,7 +122,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       </div>
       <SearchContext.Provider value={query}>
       {/* ---------------- IMÓVEL ---------------- */}
-      <Section icon={<IconHome />} title="Imóvel" keywords={SECTION_KEYWORDS.imovel} open badge={<span className="pill">{eur(i.price)}</span>}>
+      <Section icon={<IconHome />} title="Imóvel" keywords={SECTION_KEYWORDS.imovel} badge={<span className="pill">{eur(i.price)}</span>}>
         <NumberField label="Preço de compra" value={i.price} onChange={(v) => set('price', v)} suffix="€" step={1000} min={0} />
         <PropertyCard i={i} m={m} />
         <div className="row2">
@@ -208,7 +208,6 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
         icon={<IconWallet />}
         title="Capitais próprios e entrada"
         keywords={SECTION_KEYWORDS.capitais}
-        open
         loading={pending}
         badge={<span className={`pill ${m.cashLeft < 0 ? 'crit' : m.cashLeft < i.emergencyReserve ? 'warn' : 'good'}`}>LTV {m.ltv.toFixed(0)}%</span>}
       >
@@ -282,7 +281,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       </Section>
 
       {/* ---------------- CRÉDITO ---------------- */}
-      <Section icon={<IconBank />} title="Crédito" keywords={SECTION_KEYWORDS.credito} open badge={<span className="pill">TAN {pct(m.firstTan)}</span>}>
+      <Section icon={<IconBank />} title="Crédito" keywords={SECTION_KEYWORDS.credito} badge={<span className="pill">TAN {pct(m.firstTan)}</span>}>
         <SelectField
           label="Proposta de banco (preenche spread / taxas)"
           value={i.bankPreset}
@@ -445,7 +444,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       </Section>
 
       {/* ---------------- AMORTIZAÇÕES ---------------- */}
-      <Section icon={<IconArrowDownCircle />} title="Amortizações antecipadas" keywords={SECTION_KEYWORDS.amortizacoes} open badge={<span className="pill">{i.goalEnabled ? `Objetivo ${i.targetYears} anos` : i.extraPlan.enabled ? 'Plano manual' : 'Sem plano'}</span>}>
+      <Section icon={<IconArrowDownCircle />} title="Amortizações antecipadas" keywords={SECTION_KEYWORDS.amortizacoes} badge={<span className="pill">{i.goalEnabled ? `Objetivo ${i.targetYears} anos` : i.extraPlan.enabled ? 'Plano manual' : 'Sem plano'}</span>}>
         <Segmented
           value={i.amortMode}
           onChange={(v) => set('amortMode', v)}
