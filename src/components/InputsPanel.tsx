@@ -413,7 +413,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       )}
 
       {/* ---------------- CUSTOS DE AQUISIÇÃO ---------------- */}
-      <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} badge={<span className="pill">{eur(m.upfrontTotal)}</span>}>
+      <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} badge={<span className="pill" title="Impostos, escritura e comissões (sem obras nem recheio)">{eur(m.upfrontTotal - i.worksAndFurniture - i.furnishing)}</span>}>
         <div className="row2">
           <NumberField
             label="Escritura + registos"

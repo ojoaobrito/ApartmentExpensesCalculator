@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { IconBook, IconBookmark, IconCalendar, IconPie, IconTrend } from './components/icons';
 import { useScrollFade } from './components/useScrollFade';
 import { applyFinance, useFinanceSync } from './financeSync';
 import { useInputs, withDefaults } from './state';
@@ -12,12 +13,12 @@ import { ScheduleTable } from './components/ScheduleTable';
 import { ChartsTab, ScenariosTab, SourcesTab } from './components/Tabs';
 
 type Tab = 'resumo' | 'graficos' | 'tabela' | 'cenarios' | 'fontes';
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'resumo', label: 'Resumo' },
-  { id: 'graficos', label: 'Gráficos' },
-  { id: 'tabela', label: 'Plano de pagamentos' },
-  { id: 'cenarios', label: 'Gravar cenário' },
-  { id: 'fontes', label: 'Fontes' },
+const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
+  { id: 'resumo', label: 'Resumo', icon: <IconPie /> },
+  { id: 'graficos', label: 'Gráficos', icon: <IconTrend /> },
+  { id: 'tabela', label: 'Plano de pagamentos', icon: <IconCalendar /> },
+  { id: 'cenarios', label: 'Gravar cenário', icon: <IconBookmark /> },
+  { id: 'fontes', label: 'Fontes', icon: <IconBook /> },
 ];
 
 type Theme = 'auto' | 'light' | 'dark';
@@ -162,6 +163,9 @@ export default function App() {
                   if (window.location.hash) history.replaceState(null, '', window.location.pathname);
                 }}
               >
+                <span className="tab-icon" aria-hidden>
+                  {t.icon}
+                </span>
                 {t.label}
               </button>
             ))}

@@ -231,7 +231,7 @@ input[type='range'] { width: 100%; accent-color: var(--accent); margin: 2px 0 0;
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button { border: 0; background: transparent; padding: 10px 14px 12px; font-size: 14px; color: var(--text-2); white-space: nowrap; transition: color 0.15s; }
 .tabs button:hover { color: var(--text); }
-.tabs button.on { color: var(--text); font-weight: 600; }
+.tabs button.on { color: var(--accent); font-weight: 600; }
 /* Sublinhado que desliza até ao separador ativo */
 .tab-indicator { position: absolute; bottom: 0; left: 0; height: 2px; border-radius: 2px; background: var(--accent); transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), width 0.28s cubic-bezier(0.2, 0.7, 0.2, 1); pointer-events: none; }
 /* Entrada do conteúdo do separador, na direção da mudança */
@@ -358,3 +358,8 @@ body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, col
 .finance-link.on { border-style: solid; border-color: color-mix(in srgb, var(--s3) 45%, var(--border)); background: color-mix(in srgb, var(--s3) 8%, var(--surface)); }
 .finance-link.off { color: var(--text-2); }
 .living-fixed { text-align: right; font-variant-numeric: tabular-nums; padding-right: 6px; }
+
+/* Separadores com ícone */
+.tabs button { display: inline-flex; align-items: center; gap: 8px; }
+.tab-icon { display: grid; place-items: center; color: var(--text-3); transition: color 0.15s; }
+.tabs button.on .tab-icon, .tabs button:hover .tab-icon { color: var(--accent); }
