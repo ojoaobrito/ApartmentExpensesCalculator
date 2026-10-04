@@ -4,8 +4,8 @@ import { applyFinance, useFinanceSync } from './financeSync';
 import { useInputs, withDefaults } from './state';
 import { useScenarios } from './storage';
 import { compute } from './model';
-import { RESEARCH_DATE, EURIBOR } from './data/market';
-import { duration, eur, eurC, pct } from './lib/format';
+import { RESEARCH_DATE } from './data/market';
+import { duration, eur, eurC } from './lib/format';
 import { InputsPanel } from './components/InputsPanel';
 import { Alerts, Kpis, SummaryTab } from './components/Summary';
 import { ScheduleTable } from './components/ScheduleTable';
@@ -96,7 +96,7 @@ export default function App() {
         <div>
           <h1>Simulador de compra de casa</h1>
           <div className="sub">
-            Crédito à habitação em Portugal · dados de {RESEARCH_DATE} · Euribor 12M {pct(EURIBOR.m12, 3)} · BCE {pct(EURIBOR.ecbDeposit)}
+            Crédito à habitação em Portugal · dados de {RESEARCH_DATE}
           </div>
         </div>
         <div className="spacer" />
