@@ -1,4 +1,5 @@
 import type { Inputs } from '../state';
+import { ChevronsDownUp, ChevronsUpDown, ExternalLink, X } from 'lucide-react';
 import type { Model } from '../model';
 import { BANK_OFFERS, EURIBOR, EURIBOR_SCENARIOS, IMI_PRESETS, LISTING, LOCAL_MARKET, RULES, YOUNG_REGISTRY_DISCOUNT } from '../data/market';
 import { eur, pct } from '../lib/format';
@@ -102,21 +103,15 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
           />
           {query && (
             <button type="button" className="btn small ghost" onClick={() => setQuery('')} aria-label="Limpar pesquisa">
-              ✕
+              <X size={14} strokeWidth={2} />
             </button>
           )}
         </span>
         <button type="button" className="btn icon-btn" title="Expandir todas as secções" aria-label="Expandir todas as secções" onClick={() => setAllOpen(true)}>
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
-            <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M4 2.5h8M4 13.5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
+          <ChevronsUpDown size={16} strokeWidth={2} />
         </button>
         <button type="button" className="btn icon-btn" title="Colapsar todas as secções" aria-label="Colapsar todas as secções" onClick={() => setAllOpen(false)}>
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
-            <path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M4 2.5h8M4 13.5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
+          <ChevronsDownUp size={16} strokeWidth={2} />
         </button>
       </div>
       <div ref={emptyRef} className="empty search-empty">
@@ -147,7 +142,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
           </span>
           {i.listingUrl && (
             <a className="hint" href={i.listingUrl} target="_blank" rel="noreferrer">
-              Abrir anúncio ↗
+              Abrir anúncio <ExternalLink size={12} strokeWidth={2} />
             </a>
           )}
         </label>
@@ -525,7 +520,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
               <NumberField label="Mês" value={l.month} onChange={(v) => set('lumpSums', i.lumpSums.map((x) => (x.id === l.id ? { ...x, month: Math.max(1, Math.round(v)) } : x)))} min={1} hint={`Ano ${Math.ceil(l.month / 12)}`} />
               <NumberField label="Valor" value={l.amount} onChange={(v) => set('lumpSums', i.lumpSums.map((x) => (x.id === l.id ? { ...x, amount: v } : x)))} suffix="€" step={1000} min={0} hint=" " />
               <button type="button" className="btn small" style={{ marginBottom: 22 }} onClick={() => set('lumpSums', i.lumpSums.filter((x) => x.id !== l.id))} aria-label="Remover">
-                ✕
+                <X size={14} strokeWidth={2} />
               </button>
             </div>
           ))}
@@ -769,7 +764,7 @@ function FinanceLink({ finance, synced, on, setOn }: { finance: FinanceSync; syn
       <span className="small muted">
         {eur(d.liquid)} líquidos · {eur(d.invested)} investidos · {d.recurring.length} despesas recorrentes ·{' '}
         <a href={FINANCE_APP_URL} target="_blank" rel="noreferrer">
-          abrir ↗
+          abrir <ExternalLink size={12} strokeWidth={2} />
         </a>
       </span>
     </div>

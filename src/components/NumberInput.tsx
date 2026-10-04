@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { MoveHorizontal } from 'lucide-react';
 
 /**
  * Campo numérico partilhado, ao estilo do Figma:
@@ -11,8 +12,6 @@ import { useEffect, useRef, useState } from 'react';
 const PX_PER_STEP = 4;
 /** Distância à borda da janela a partir da qual o valor avança sozinho */
 const EDGE_PX = 28;
-const SCRUB_SVG =
-  '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M5 4.5 1.5 8 5 11.5M11 4.5 14.5 8 11 11.5M2 8h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 export interface NumberInputProps {
   value: number;
@@ -157,7 +156,7 @@ export function NumberInput({ value, onChange, step = 1, min, max, suffix, disab
         onPointerDown={onPointerDown}
         onClick={(e) => e.preventDefault()}
       >
-        <span dangerouslySetInnerHTML={{ __html: SCRUB_SVG }} />
+        <MoveHorizontal size={13} strokeWidth={2} />
       </span>
       <input
         inputMode="decimal"

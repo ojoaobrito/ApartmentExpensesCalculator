@@ -1,4 +1,5 @@
 import type { Inputs } from '../state';
+import { X } from 'lucide-react';
 import type { Model } from '../model';
 import { DEFAULT_LIVING_COSTS, LIVING_COSTS_SOURCE, MONTHS_PT, type LivingCost } from '../data/livingCosts';
 import { eur } from '../lib/format';
@@ -116,7 +117,7 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced 
                         ))}
                       </select>
                       <button type="button" className="btn small ghost" disabled={synced} style={synced ? { visibility: 'hidden' } : undefined} onClick={() => remove(c.id)} aria-label={`Remover ${c.name}`} title="Remover">
-                        ✕
+                        <X size={14} strokeWidth={2} />
                       </button>
                     </div>
                   ))}

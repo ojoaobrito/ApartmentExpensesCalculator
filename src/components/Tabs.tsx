@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { X } from 'lucide-react';
 import { withDefaults, type Inputs } from '../state';
 import { exportScenarios, parseScenarioFile, type SavedScenario, type useScenarios } from '../storage';
 import { compute, type Model } from '../model';
@@ -190,7 +191,7 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
                   if (confirm(`Apagar "${s.name}"?`)) void store.remove(s.id);
                 }}
               >
-                ✕
+                <X size={14} strokeWidth={2} />
               </button>
             </div>
           ))}

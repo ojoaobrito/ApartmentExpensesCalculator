@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { IconBook, IconBookmark, IconCalendar, IconPie, IconTrend } from './components/icons';
+import { IconBook, IconBookmark, IconCalendar, IconChart, IconPie } from './components/icons';
 import { useScrollFade } from './components/useScrollFade';
 import { applyFinance, useFinanceSync } from './financeSync';
 import { useInputs, withDefaults } from './state';
@@ -15,7 +15,7 @@ import { ChartsTab, ScenariosTab, SourcesTab } from './components/Tabs';
 type Tab = 'resumo' | 'graficos' | 'tabela' | 'cenarios' | 'fontes';
 const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
   { id: 'resumo', label: 'Resumo', icon: <IconPie /> },
-  { id: 'graficos', label: 'Gráficos', icon: <IconTrend /> },
+  { id: 'graficos', label: 'Gráficos', icon: <IconChart /> },
   { id: 'tabela', label: 'Plano de pagamentos', icon: <IconCalendar /> },
   { id: 'cenarios', label: 'Gravar cenário', icon: <IconBookmark /> },
   { id: 'fontes', label: 'Fontes', icon: <IconBook /> },

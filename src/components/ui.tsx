@@ -1,4 +1,5 @@
 import { useContext, type ReactNode } from 'react';
+import { ChevronRight, CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
 import { NumberInput } from './NumberInput';
 import { animateDetails } from './motion';
 import { SearchContext } from './search';
@@ -140,9 +141,7 @@ export function Section(props: { icon: ReactNode; title: string; keywords?: stri
           <span className="badge">{props.badge}</span>
         </span>
         <span className="chev" aria-hidden>
-          <svg viewBox="0 0 16 16" width="14" height="14">
-            <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ChevronRight size={16} strokeWidth={2.2} />
         </span>
       </summary>
       <div className="section-body">{props.children}</div>
@@ -153,17 +152,17 @@ export function Section(props: { icon: ReactNode; title: string; keywords?: stri
 export function SourceLink({ id }: { id: string }) {
   return (
     <a className="src" href={`#fonte-${id}`} title="Ver fonte" aria-label="Ver fonte" onClick={(e) => e.stopPropagation()}>
-      ⓘ
+      <Info size={13} strokeWidth={2} />
     </a>
   );
 }
 
 export function Alert(props: { kind: 'warn' | 'crit' | 'ok' | 'info'; children: ReactNode }) {
-  const icon = { warn: '!', crit: '×', ok: '✓', info: 'i' }[props.kind];
+  const Icon = { warn: TriangleAlert, crit: CircleX, ok: CircleCheck, info: Info }[props.kind];
   return (
     <div className={`alert ${props.kind}`} role={props.kind === 'crit' ? 'alert' : undefined}>
       <span className="a-icon" aria-hidden>
-        {icon}
+        <Icon size={18} strokeWidth={2.2} />
       </span>
       <div>{props.children}</div>
     </div>

@@ -141,7 +141,7 @@ details.section > summary .sec-head { display: flex; flex-direction: column; gap
 details.section > summary .sec-title { line-height: 1.25; }
 details.section > summary::-webkit-details-marker { display: none; }
 /* Seta num botão circular, roda ao abrir */
-details.section > summary .chev { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.15s, background 0.15s, border-color 0.15s; }
+details.section > summary .chev { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.15s, background 0.15s, border-color 0.15s; }
 details.section > summary:hover .chev { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
 details.section[open]:not(.is-closing) > summary .chev { transform: rotate(90deg); }
 details.section > summary .badge { display: flex; min-height: 19px; font-weight: 500; min-width: 0; }
@@ -215,15 +215,15 @@ input[type='range'] { width: 100%; accent-color: var(--accent); margin: 2px 0 0;
 /* ---------- alerts ---------- */
 .alerts { display: flex; flex-direction: column; gap: 8px; }
 .alert { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: 13px; border: 1px solid transparent; }
-.alert .a-icon { font-weight: 700; flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; color: #fff; }
+.alert .a-icon { flex: none; display: grid; place-items: center; margin-top: -1px; }
 .alert.warn { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
-.alert.warn .a-icon { background: var(--warn); color: #000; }
+.alert.warn .a-icon { color: var(--warn); }
 .alert.crit { background: var(--crit-soft); border-color: color-mix(in srgb, var(--crit) 40%, transparent); }
-.alert.crit .a-icon { background: var(--crit); }
+.alert.crit .a-icon { color: var(--crit); }
 .alert.ok { background: color-mix(in srgb, var(--good) 10%, var(--surface)); border-color: color-mix(in srgb, var(--good) 35%, transparent); }
-.alert.ok .a-icon { background: var(--good); }
+.alert.ok .a-icon { color: var(--good); }
 .alert.info { background: var(--accent-soft); }
-.alert.info .a-icon { background: var(--accent); }
+.alert.info .a-icon { color: var(--accent); }
 
 /* ---------- tabs ---------- */
 /* A linha de base é uma sombra interior: nada transborda, logo não há scroll vertical */
