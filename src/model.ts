@@ -5,6 +5,7 @@ const EURIBOR_NOW = { 3: EURIBOR.m3, 6: EURIBOR.m6, 12: EURIBOR.m12 } as const;
 import { estimateTAEG, pmt, simulate, solveExtraForTarget, type LoanParams } from './lib/loan';
 import { acquisitionTaxes, imtAssignment } from './lib/taxes';
 import { eur as fmt, eurC, pct } from './lib/format';
+import { summarizeLivingCosts } from './data/livingCosts';
 
 export type AlertKind = 'warn' | 'crit' | 'ok' | 'info';
 export interface ModelAlert {
@@ -180,7 +181,14 @@ function computeWith(inp: Inputs) {
     inp.netMonthlyIncome > 0 ? (monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly) / inp.netMonthlyIncome * 100 : 0;
   // Quanto sobra por mês depois da casa, das amortizações e de outras dívidas
   const monthlySpare = inp.netMonthlyIncome - (monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly);
-  const effortStatus: EffortStatus = inp.netMonthlyIncome <= 0 ? 'none' : effortStatusFor(effortTotal);
+
+  // Despesas do dia a dia (opcional): o que sobra mesmo do salário depois de tudo
+  const living = inp.livingCostsEnabled ? summarizeLivingCosts(inp.livingCosts) : null;
+  const spareAfterLiving = living ? monthlySpare - living.expensesMonthly : null; // antes de investir
+  const spareAfterAll = living && spareAfterLiving !== null ? spareAfterLiving - living.investMonthly : null;
+  let effortStatus: EffortStatus = inp.netMonthlyIncome <= 0 ? 'none' : effortStatusFor(effortTotal);
+  // Se o salário não chega para casa + despesas do dia a dia, não é viável
+  if (effortStatus !== 'none' && spareAfterLiving !== null && spareAfterLiving < 0) effortStatus = 'impossible';
 
   const maxTermYears = RULES.maxTermForAge(oldest);
 
@@ -205,7 +213,17 @@ function computeWith(inp: Inputs) {
     alerts.push({ kind: 'crit', text: `Prazo de ${inp.termYears} anos acima do máximo recomendado pelo Banco de Portugal para quem tem ${oldest} anos (${maxTermYears} anos).` });
   if (oldest + inp.termYears > RULES.maxAgeAtEnd)
     alerts.push({ kind: 'warn', text: `O crédito terminaria aos ${oldest + inp.termYears} anos; a maioria dos bancos exige que termine até aos ${RULES.maxAgeAtEnd}.` });
-  if (effortStatus === 'impossible')
+  if (living && spareAfterLiving !== null && spareAfterLiving < 0 && monthlySpare >= 0)
+    alerts.push({
+      kind: 'crit',
+      text: `Com as despesas do dia a dia (${fmt(living.expensesMonthly)}/mês) o salário não chega: faltam ${fmt(-spareAfterLiving)}/mês${extraMonthlyEquivalent > 0 ? '. Alarga o prazo do objetivo de liquidação ou reduz as amortizações.' : '.'}`,
+    });
+  else if (living && spareAfterAll !== null && spareAfterAll < 0 && spareAfterLiving !== null && spareAfterLiving >= 0)
+    alerts.push({
+      kind: 'warn',
+      text: `Depois da casa e das despesas do dia a dia sobram ${fmt(spareAfterLiving)}/mês — não chega para os ${fmt(living.investMonthly)}/mês de investimentos que tens planeados.`,
+    });
+  if (effortStatus === 'impossible' && monthlySpare < 0)
     alerts.push({
       kind: 'crit',
       text: `O plano custa ${fmt(monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly)}/mês (casa${extraMonthlyEquivalent > 0 ? ` + ${fmt(extraMonthlyEquivalent)} de amortizações` : ''}) e o rendimento é ${fmt(inp.netMonthlyIncome)}: faltam ${fmt(-monthlySpare)}/mês. ${extraMonthlyEquivalent > 0 ? 'Alarga o prazo do objetivo de liquidação ou reduz as amortizações.' : 'Este crédito não cabe no rendimento.'}`,
@@ -273,6 +291,9 @@ function computeWith(inp: Inputs) {
     effortTotal,
     effortStatus,
     monthlySpare,
+    living,
+    spareAfterLiving,
+    spareAfterAll,
     maxTermYears,
     oldest,
     interestSaved: noExtras.totalInterest - withExtras.totalInterest,

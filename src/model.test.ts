@@ -100,3 +100,51 @@ describe('esforço total', () => {
     expect(compute({ ...i, netMonthlyIncome: 0 }).effortStatus).toBe('none');
   });
 });
+
+describe('despesas do dia a dia', () => {
+  it('importa a folha sem a renda e soma mensais + anuais/12, investimentos à parte', () => {
+    const i = defaultInputs();
+    expect(i.livingCosts.some((c) => /renda/i.test(c.name))).toBe(false);
+    const m = compute({ ...i, livingCostsEnabled: true });
+    const monthlyExpenses = 27.4 + 10.6 + 1.35 + 9.99 + 60 + 20 + 108 + 19.99 + 2.83 + 250 + 50 + 20 + 20 + 27;
+    expect(m.living!.expensesMonthly).toBeCloseTo(monthlyExpenses + 419.07 / 12, 2);
+    expect(m.living!.investMonthly).toBe(600);
+    expect(m.spareAfterLiving).toBeCloseTo(m.monthlySpare - m.living!.expensesMonthly, 6);
+    expect(m.spareAfterAll).toBeCloseTo(m.spareAfterLiving! - 600, 6);
+    expect(m.living!.peak).toEqual({ month: 1, amount: 300.61, names: ['Seguro carro (Mudum)', 'Quotas Benfica'] });
+  });
+
+  it('desligada não mexe na simulação; quando o salário não chega fica impossível', () => {
+    const i = defaultInputs();
+    expect(compute(i).living).toBeNull();
+    const m = compute({ ...i, livingCostsEnabled: true, netMonthlyIncome: 2_000 });
+    expect(m.spareAfterLiving!).toBeLessThan(0);
+    expect(m.effortStatus).toBe('impossible');
+    expect(m.alerts.some((a) => a.kind === 'crit' && a.text.includes('despesas do dia a dia'))).toBe(true);
+  });
+
+  it('desligar uma despesa reduz o total', () => {
+    const i = { ...defaultInputs(), livingCostsEnabled: true };
+    const all = compute(i).living!.expensesMonthly;
+    const sem = compute({ ...i, livingCosts: i.livingCosts.map((c) => (c.id === 'claude' ? { ...c, enabled: false } : c)) }).living!.expensesMonthly;
+    expect(all - sem).toBeCloseTo(108, 6);
+  });
+});
+
+describe('ligação à app de Finanças', () => {
+  it('usa liquidez, investimentos, mais-valias e despesas da app', async () => {
+    const { applyFinance } = await import('./financeSync');
+    const i = { ...defaultInputs(), investmentsUsed: 200_000 };
+    const e = applyFinance(i, {
+      version: 1, updatedAt: '', netSalary: 2000, gainsTaxPct: 28, liquid: 3519.99, invested: 168528.55, taxableGains: 17219.46,
+      taxableGainsPctOfInvested: 10.22, netWorth: 167227.09, accounts: [],
+      recurring: [{ id: 'luz', name: 'Luz', category: 'Casa', amount: 50, frequency: 'mensal', month: null, investment: false }],
+    });
+    expect(e.cash).toBe(3519.99);
+    expect(e.investments).toBe(168528.55);
+    expect(e.investmentsUsed).toBe(168528.55); // limitado ao que existe
+    expect(e.investmentsGainPct).toBe(10.22);
+    expect(e.livingCosts).toEqual([{ id: 'fh-luz', name: 'Luz', category: 'Casa', amount: 50, frequency: 'mensal', month: undefined, investment: false, enabled: true }]);
+    expect(e.netMonthlyIncome).toBe(i.netMonthlyIncome); // o rendimento continua a ser do simulador
+  });
+});

@@ -105,6 +105,7 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
     { label: 'Custo total', get: (c) => eur(c.model.downPayment + c.model.upfrontTotal + c.model.withExtras.totalOutflow) },
     { label: 'Liquidez após escritura', get: (c) => eur(c.model.cashLeft) },
     { label: 'TAEG', get: (c) => pct(c.model.taeg) },
+    { label: 'Sobra no fim do mês', get: (c) => (c.model.spareAfterAll !== null ? eur(c.model.spareAfterAll) : c.inputs.netMonthlyIncome ? `${eur(c.model.monthlySpare)} (sem despesas)` : '—') },
     { label: 'Taxa de esforço (stress)', get: (c) => (c.inputs.netMonthlyIncome ? `${pct(c.model.dsti, 1)} (${pct(c.model.dstiStress, 1)})` : '—') },
   ];
   const status = {

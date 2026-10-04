@@ -9,7 +9,7 @@
 [![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-2a78d6)](#)
 [![Live](https://img.shields.io/badge/live-simulador--casa.pages.dev-1baf7a)](https://simulador-casa.pages.dev)
 [![Dados](https://img.shields.io/badge/dados%20de%20mercado-out%2F2026-eb6834)](#dados-e-fontes)
-[![Testes](https://img.shields.io/badge/testes-23%20a%20passar-008300)](#qualidade)
+[![Testes](https://img.shields.io/badge/testes-27%20a%20passar-008300)](#qualidade)
 
 [**Abrir a app →**](https://simulador-casa.pages.dev)
 
@@ -33,7 +33,9 @@ O Simulador Casa junta tudo isto numa só página, com dados reais de mercado e 
 - **Impostos e custos de 2026.** Tabelas de IMT do OE2026, IMT Jovem com isenção proporcional à quota de cada comprador, Imposto do Selo, Casa Pronta, preçários dos principais bancos.
 - **Avaliação bancária.** O LTV é calculado sobre o menor entre o preço e a avaliação. Se o banco avaliar abaixo do preço, o simulador mostra quanto a mais tens de pôr.
 - **Entrada automática.** Toda a liquidez disponível, depois de impostos, custos, recheio e fundo de emergência, vai para a entrada. Também há modo manual.
+- **Orçamento completo (opcional).** Junta as despesas do dia a dia e os investimentos mensais para mostrar quanto sobra mesmo do salário no fim do mês.
 - **Relatório PDF.** Seis páginas com resumo, pressupostos, gráficos, plano de pagamentos, cenários e fontes, prontas para levar ao banco.
+- **Ligado à app de Finanças.** Liquidez, investimentos, mais-valias e despesas recorrentes vêm da app [Finanças](https://github.com/ojoaobrito/FinanceHub): editas lá e o simulador atualiza.
 - **Cenários na nuvem.** Grava, compara lado a lado e recarrega simulações em qualquer dispositivo.
 
 <table>
@@ -54,6 +56,10 @@ O Simulador Casa junta tudo isto numa só página, com dados reais de mercado e 
 - Compra por **cedência de posição contratual**, com o IMT sobre o prémio pago ao cedente quando o CPCV tem cláusula de livre cedência.
 - Poupança, investimentos a resgatar (com imposto sobre mais-valias), decoração e recheio, fundo de emergência.
 - Custos da compra editáveis linha a linha: Imposto do Selo do crédito, escritura e registos, avaliação, dossier, solicitador.
+
+### Despesas do dia a dia (opcional)
+- Lista editável de despesas mensais e anuais (com o mês de cobrança), agrupadas por categoria, importada de uma folha de cálculo pessoal.
+- Investimentos e poupança à parte: sobra antes e depois de investir, e o mês em que as despesas anuais pesam mais.
 
 ### Crédito
 - Taxa **variável, mista ou fixa**, com propostas pré-preenchidas de 12 bancos (preçários de outubro de 2026) e a média de mercado do BdP.
@@ -148,16 +154,17 @@ src/
 ├── model.ts              Liga tudo: inputs → resultados e alertas
 ├── state.ts              Parâmetros, valores por defeito, persistência local
 ├── storage.ts            Cenários gravados (nuvem ou browser), import/export
+├── financeSync.ts        Ligação à app de Finanças
 ├── components/           Interface (painel, resumo, gráficos, campos, pesquisa)
 └── pdf/                  Relatório PDF (@react-pdf/renderer, carregado a pedido)
-functions/api/            API de cenários (Cloudflare Pages Functions + KV)
+functions/api/            API de cenários (KV) e proxy para a app de Finanças (/api/finance)
 ```
 
 **Stack:** React 19, TypeScript, Vite, Recharts, @react-pdf/renderer, Vitest, Cloudflare Pages + Workers KV.
 
 ## Qualidade
 
-- 23 testes sobre o motor do crédito (prestação, revisões, taxa mista, amortizações, objetivo, TAEG), impostos (IMT 2026, IMT Jovem, quotas) e modelo (entrada automática, custos, esforço).
+- 27 testes sobre o motor do crédito (prestação, revisões, taxa mista, amortizações, objetivo, TAEG), impostos (IMT 2026, IMT Jovem, quotas) e modelo (entrada automática, custos, esforço, despesas do dia a dia).
 - TypeScript estrito e lint sem avisos.
 - Cada parâmetro do painel foi verificado para garantir que altera o resultado; os que não se aplicam ficam desativados ou escondidos.
 

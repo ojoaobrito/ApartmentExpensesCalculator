@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useScrollFade } from './components/useScrollFade';
+import { applyFinance, useFinanceSync } from './financeSync';
 import { useInputs, withDefaults } from './state';
 import { useScenarios } from './storage';
 import { compute } from './model';
@@ -24,7 +25,11 @@ type Theme = 'auto' | 'light' | 'dark';
 export default function App() {
   const { inputs, set, patch, reset, replace } = useInputs();
   const scenarios = useScenarios();
-  const model = useMemo(() => compute(inputs), [inputs]);
+  const finance = useFinanceSync();
+  // Com a app de Finanças ligada, os capitais próprios e as despesas vêm de lá
+  const synced = inputs.useFinanceData && finance.status === 'ready';
+  const effective = useMemo(() => (synced && finance.data ? applyFinance(inputs, finance.data) : inputs), [synced, finance, inputs]);
+  const model = useMemo(() => compute(effective), [effective]);
   const [tab, setTabState] = useState<Tab>('resumo');
   const [tabDir, setTabDir] = useState<'left' | 'right'>('right');
   // Muda de separador guardando a direção (para a animação de entrada)
@@ -109,7 +114,7 @@ export default function App() {
             setExporting(true);
             try {
               const { exportPdf } = await import('./pdf/export');
-              await exportPdf(inputs, model, scenarios.list);
+              await exportPdf(effective, model, scenarios.list);
             } catch (e) {
               alert(`Não foi possível gerar o PDF: ${(e as Error).message}`);
             } finally {
@@ -141,9 +146,9 @@ export default function App() {
         </span>
       </div>
       <div className="layout">
-        <InputsPanel inputs={inputs} set={set} patch={patch} model={model} />
+        <InputsPanel inputs={effective} set={set} patch={patch} model={model} finance={finance} synced={synced} />
         <main className="results" ref={resultsRef}>
-          <Kpis m={model} i={inputs} />
+          <Kpis m={model} i={effective} />
           <Alerts m={model} />
           <nav className="tabs" role="tablist" ref={navRef}>
             {TABS.map((t) => (
@@ -163,11 +168,11 @@ export default function App() {
             <span className="tab-indicator" ref={indicatorRef} aria-hidden />
           </nav>
           <div className="tab-panel" key={tab} data-dir={tabDir} role="tabpanel">
-          {tab === 'resumo' && <SummaryTab m={model} i={inputs} />}
+          {tab === 'resumo' && <SummaryTab m={model} i={effective} />}
           {tab === 'graficos' && <ChartsTab m={model} />}
           {tab === 'tabela' && <ScheduleTable result={model.withExtras} />}
           {tab === 'cenarios' && (
-            <ScenariosTab inputs={inputs} model={model} store={scenarios} onLoad={(s) => replace(withDefaults(s.inputs))} />
+            <ScenariosTab inputs={effective} model={model} store={scenarios} onLoad={(s) => replace(withDefaults(s.inputs))} />
           )}
           {tab === 'fontes' && <SourcesTab />}
           </div>

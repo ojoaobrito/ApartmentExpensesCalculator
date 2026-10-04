@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AmortMode, ExtraPlan, LumpSum, RateType } from './lib/loan';
 import { DEFAULTS, EURIBOR_SCENARIOS, LISTING } from './data/market';
 import { STAMP_LOAN_PCT } from './lib/taxes';
+import { DEFAULT_LIVING_COSTS, type LivingCost } from './data/livingCosts';
 
 export interface Buyer {
   id: string;
@@ -76,6 +77,13 @@ export interface Inputs {
   netMonthlyIncome: number;
   otherDebtMonthly: number;
 
+  // Despesas do dia a dia (opcional)
+  livingCostsEnabled: boolean;
+  livingCosts: LivingCost[];
+
+  /** Usar a liquidez, investimentos e despesas da app de Finanças quando disponível */
+  useFinanceData: boolean;
+
   // Imposto sobre mais-valias ao resgatar investimentos
   capitalGainsTaxPct: number;
 }
@@ -100,7 +108,7 @@ export const defaultInputs = (): Inputs => ({
   investments: 45_000,
   investmentsUsed: 0,
   investmentsGainPct: 10,
-  emergencyReserve: 15_000,
+  emergencyReserve: 5_000,
   downPayment: 70_000,
   autoDownPayment: true,
 
@@ -135,8 +143,12 @@ export const defaultInputs = (): Inputs => ({
   homeInsuranceAnnual: DEFAULTS.homeInsuranceAnnual,
   monthlyBankFee: DEFAULTS.monthlyBankFee,
 
-  netMonthlyIncome: 3_000,
+  netMonthlyIncome: 3_300,
   otherDebtMonthly: 0,
+
+  livingCostsEnabled: false,
+  livingCosts: DEFAULT_LIVING_COSTS.map((c) => ({ ...c })),
+  useFinanceData: true,
 
   capitalGainsTaxPct: 28,
 });
@@ -160,11 +172,22 @@ function save(key: string, value: unknown) {
   }
 }
 
+/**
+ * Atualiza valores gravados que ainda estão nos valores por defeito antigos
+ * (para quem nunca os mudou passar a ver os novos).
+ */
+function migrate(p: Partial<Inputs>): Partial<Inputs> {
+  const out = { ...p };
+  if (out.emergencyReserve === 15_000) out.emergencyReserve = 5_000;
+  if (out.netMonthlyIncome === 3_000) out.netMonthlyIncome = 3_300;
+  return out;
+}
+
 /** Completa inputs gravados com versões antigas com os valores por defeito atuais */
 export const withDefaults = (p: Partial<Inputs>): Inputs => ({ ...defaultInputs(), ...p });
 
 export function useInputs() {
-  const [inputs, setInputs] = useState<Inputs>(() => withDefaults(load<Partial<Inputs>>(KEY, {})));
+  const [inputs, setInputs] = useState<Inputs>(() => withDefaults(migrate(load<Partial<Inputs>>(KEY, {}))));
   useEffect(() => save(KEY, inputs), [inputs]);
   const set = <K extends keyof Inputs>(k: K, v: Inputs[K]) => setInputs((s) => ({ ...s, [k]: v }));
   const patch = (p: Partial<Inputs>) => setInputs((s) => ({ ...s, ...p }));

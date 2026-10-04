@@ -479,6 +479,22 @@ export function Report({ inputs: i, model: m, scenarios, generatedAt }: { inputs
                 <KV total label="Esforço mensal total" value={eurC(totalMonthly)} />
               </>
             )}
+            {m.living && m.spareAfterLiving !== null && i.netMonthlyIncome > 0 && (
+              <>
+                <View style={{ height: 8 }} />
+                <Text style={S.h3}>{t('Orçamento do mês')}</Text>
+                <KV label="Rendimento líquido" value={eurC(i.netMonthlyIncome)} />
+                <KV label="- Casa e amortizações" value={`-${eurC(totalMonthly + i.otherDebtMonthly)}`} />
+                <KV label="- Despesas do dia a dia" value={`-${eurC(m.living.expensesMonthly)}`} note={m.living.byCategory.map((c) => `${c.category} ${eur(c.monthly)}`).join(' · ')} />
+                <KV total label="Sobra antes de investir" value={eurC(m.spareAfterLiving)} />
+                {m.living.investMonthly > 0 && m.spareAfterAll !== null && (
+                  <>
+                    <KV label="- Investimentos e poupança" value={`-${eurC(m.living.investMonthly)}`} />
+                    <KV total label="Sobra no fim do mês" value={eurC(m.spareAfterAll)} />
+                  </>
+                )}
+              </>
+            )}
             {i.netMonthlyIncome > 0 && (
               <Text style={[S.note, { marginTop: 6 }]}>
                 {t(`Taxa de esforço: ${pct(m.dsti, 1)}; com stress test de +${m.stressPp.toFixed(2).replace('.', ',')} p.p.: ${pct(m.dstiStress, 1)} (limite BdP ${RULES.dstiLimit}%). Com tudo incluído: ${pct(m.effortTotal, 1)} do rendimento.`)}

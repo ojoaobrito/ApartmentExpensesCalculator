@@ -2,6 +2,7 @@ import type React from 'react';
 import type { Inputs } from '../state';
 import { EFFORT_LABEL, type Model } from '../model';
 import { heroColors, METER_MAX, meterGradient } from '../lib/effortColor';
+import { MONTHS_PT_LONG } from '../data/livingCosts';
 
 /** Gradiente do cartão principal conforme o esforço (variáveis CSS) */
 function heroStyle(m: Model) {
@@ -23,7 +24,14 @@ export function Kpis({ m, i }: { m: Model; i: Inputs }) {
           <span className="hero-badge">{EFFORT_LABEL[m.effortStatus]}</span>
           {m.effortStatus !== 'none' && (
             <span>
-              {pct(m.effortTotal, 0)} do rendimento · {m.monthlySpare >= 0 ? `sobram ${eur(m.monthlySpare)}/mês` : `faltam ${eur(-m.monthlySpare)}/mês`}
+              {pct(m.effortTotal, 0)} do rendimento ·{' '}
+              {m.spareAfterLiving !== null
+                ? m.spareAfterLiving >= 0
+                  ? `sobram ${eur(m.spareAfterLiving)}/mês depois das despesas`
+                  : `faltam ${eur(-m.spareAfterLiving)}/mês com as despesas`
+                : m.monthlySpare >= 0
+                  ? `sobram ${eur(m.monthlySpare)}/mês`
+                  : `faltam ${eur(-m.monthlySpare)}/mês`}
             </span>
           )}
         </div>
@@ -225,6 +233,7 @@ export function SummaryTab({ m, i }: { m: Model; i: Inputs }) {
             <EffortBar mandatory={m.dstiStress} total={m.effortTotal} />
           </>
         )}
+        {m.living && i.netMonthlyIncome > 0 && <BudgetTable m={m} i={i} />}
       </div>
 
       <div className="card">
@@ -303,6 +312,61 @@ function CostBreakdown({ items }: { items: { label: string; value: number; color
           </tr>
         </tbody>
       </table>
+    </>
+  );
+}
+
+/** Orçamento mensal completo: salário − casa − despesas do dia a dia − investimentos */
+function BudgetTable({ m, i }: { m: Model; i: Inputs }) {
+  const live = m.living!;
+  const house = m.monthlyTotal + m.extraMonthlyEquivalent + i.otherDebtMonthly;
+  const neg = (v: number) => (v < 0 ? { color: 'var(--crit)' } : undefined);
+  return (
+    <>
+      <h3 style={{ fontSize: 14, margin: '18px 0 6px' }}>Orçamento do mês</h3>
+      <table className="kv">
+        <tbody>
+          <tr>
+            <td>Rendimento líquido</td>
+            <td>{eurC(i.netMonthlyIncome)}</td>
+          </tr>
+          <tr>
+            <td>
+              − Casa{m.extraMonthlyEquivalent > 0 ? ' e amortizações' : ''}
+              {i.otherDebtMonthly > 0 ? ' e outras dívidas' : ''}
+            </td>
+            <td>−{eurC(house)}</td>
+          </tr>
+          <tr>
+            <td>
+              − Despesas do dia a dia
+              <span className="note">{live.byCategory.map((c) => `${c.category} ${eur(c.monthly)}`).join(' · ')}</span>
+            </td>
+            <td>−{eurC(live.expensesMonthly)}</td>
+          </tr>
+          <tr className="total">
+            <td>Sobra antes de investir</td>
+            <td style={neg(m.spareAfterLiving!)}>{eurC(m.spareAfterLiving!)}</td>
+          </tr>
+          {live.investMonthly > 0 && (
+            <>
+              <tr>
+                <td>− Investimentos e poupança</td>
+                <td>−{eurC(live.investMonthly)}</td>
+              </tr>
+              <tr className="total">
+                <td>Sobra no fim do mês</td>
+                <td style={neg(m.spareAfterAll!)}>{eurC(m.spareAfterAll!)}</td>
+              </tr>
+            </>
+          )}
+        </tbody>
+      </table>
+      {live.peak && (
+        <p className="small muted" style={{ marginBottom: 0 }}>
+          As despesas anuais contam como média mensal. Em {MONTHS_PT_LONG[live.peak.month - 1]} pagas mais {eur(live.peak.amount)} ({live.peak.names.join(', ')}).
+        </p>
+      )}
     </>
   );
 }

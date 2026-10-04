@@ -337,3 +337,24 @@ body.scrub-edge-left::after { left: 0; background: linear-gradient(90deg, color-
 body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, color-mix(in srgb, var(--accent) 28%, transparent), transparent); }
 @keyframes edge-pulse { from { opacity: 0.55; } to { opacity: 1; } }
 .scrub > span { display: grid; place-items: center; }
+
+/* Despesas do dia a dia */
+.living-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.living-totals > div { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); }
+.living-totals b { font-size: 15px; }
+.living-list { display: flex; flex-direction: column; gap: 10px; }
+.living-group-head { display: flex; justify-content: space-between; font-size: 12px; font-weight: 650; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.03em; padding: 0 2px 4px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.living-row { display: grid; grid-template-columns: 16px minmax(0, 1fr) 92px 78px 24px; gap: 6px; align-items: center; padding: 2px 0; font-size: 12.5px; }
+.living-row input[type='checkbox'] { accent-color: var(--accent); margin: 0; }
+.living-row.off .living-name, .living-row.off .inline-number { opacity: 0.45; }
+.living-name { min-width: 0; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text); font: inherit; padding: 4px 6px; text-overflow: ellipsis; }
+.living-name:hover { border-color: var(--border); }
+.living-name:focus { outline: none; border-color: var(--accent); background: var(--surface-2); }
+.living-freq { min-width: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-2); font: inherit; font-size: 12px; padding: 4px 4px; }
+.living-row .btn.small { padding: 2px 4px; }
+
+/* Ligação à app de Finanças */
+.finance-link { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 8px; border: 1px dashed var(--border); font-size: 13px; }
+.finance-link.on { border-style: solid; border-color: color-mix(in srgb, var(--s3) 45%, var(--border)); background: color-mix(in srgb, var(--s3) 8%, var(--surface)); }
+.finance-link.off { color: var(--text-2); }
+.living-fixed { text-align: right; font-variant-numeric: tabular-nums; padding-right: 6px; }

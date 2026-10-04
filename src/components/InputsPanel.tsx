@@ -6,12 +6,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Check, InlineNumber, NumberField, Section, Segmented, SelectField, SourceLink } from './ui';
 import { NumberInput } from './NumberInput';
 import { useScrollFade } from './useScrollFade';
+import { LivingCostsSection } from './LivingCostsSection';
+import { FINANCE_APP_URL, type FinanceSync } from '../financeSync';
 import { animateDetails } from './motion';
 import { IconArrowDownCircle, IconBank, IconHome, IconPie, IconReceipt, IconSearch, IconTrend, IconUmbrella, IconWallet } from './icons';
 import { translateEuriborPath } from '../lib/loan';
 import { applySearch, SearchContext } from './search';
 
 interface Props {
+  finance: FinanceSync;
+  synced: boolean;
   inputs: Inputs;
   set: <K extends keyof Inputs>(k: K, v: Inputs[K]) => void;
   patch: (p: Partial<Inputs>) => void;
@@ -28,6 +32,7 @@ const FREQ = [
 const EFFORT_PILL: Record<Model['effortStatus'], string> = { none: '', ok: 'good', tight: 'warn', hard: 'warn', impossible: 'crit' };
 
 const SECTION_KEYWORDS = {
+  despesas: 'despesas do dia a dia orçamento salário gastos mensais anuais compras supermercado luz gás água internet ginásio carro combustível seguro iuc software subscrições investimentos etf poupança folha google sheet',
   imovel: 'imóvel preço avaliação bancária área m2 metro quadrado anúncio idealista vpt valor patrimonial condomínio imi isenção obras cedência posição contratual prémio cedente',
   capitais: 'capitais próprios e entrada decoração recheio móveis mobília mobiliário eletrodomésticos disponível poupança liquidez investimentos resgatar mais-valia imposto fundo de emergência entrada ltv capital próprio dinheiro',
   custos: 'custos de escritura e banco escritura registos casa pronta solicitador advogado avaliação comissões dossier formalização imposto do selo crédito custos iniciais',
@@ -41,7 +46,7 @@ const SECTION_KEYWORDS = {
 /** "ano 2, mês 1" para o mês 13 do contrato */
 const monthLabel = (m: number) => `Ano ${Math.ceil(m / 12)}, mês ${((m - 1) % 12) + 1}`;
 
-export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
+export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }: Props) {
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const asideRef = useRef<HTMLElement>(null);
@@ -208,9 +213,10 @@ export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
         open
         badge={<span className={`pill ${m.cashLeft < 0 ? 'crit' : m.cashLeft < i.emergencyReserve ? 'warn' : 'good'}`}>LTV {m.ltv.toFixed(0)}%</span>}
       >
+        <FinanceLink finance={finance} synced={synced} on={i.useFinanceData} setOn={(v) => set('useFinanceData', v)} />
         <div className="row2">
-          <NumberField label="Poupança (liquidez)" value={i.cash} onChange={(v) => set('cash', v)} suffix="€" step={1000} min={0} />
-          <NumberField label="Investimentos" value={i.investments} onChange={(v) => patch({ investments: v, investmentsUsed: Math.min(i.investmentsUsed, v) })} suffix="€" step={1000} min={0} />
+          <NumberField label="Poupança (liquidez)" value={i.cash} onChange={(v) => set('cash', v)} suffix="€" step={1000} min={0} disabled={synced} hint={synced ? 'Da app de Finanças' : undefined} />
+          <NumberField label="Investimentos" value={i.investments} onChange={(v) => patch({ investments: v, investmentsUsed: Math.min(i.investmentsUsed, v) })} suffix="€" step={1000} min={0} disabled={synced} hint={synced ? 'Da app de Finanças' : undefined} />
         </div>
         <NumberField
           label="Investimentos a resgatar para a compra"
@@ -223,7 +229,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
           hint={m.investmentsTax > 0 ? `Imposto estimado sobre mais-valias ao resgatar: ${eur(m.investmentsTax)}` : undefined}
         />
         <div className="row2">
-          <NumberField label="Mais-valia latente" value={i.investmentsGainPct} onChange={(v) => set('investmentsGainPct', v)} suffix="% do valor" step={1} min={0} max={100} disabled={i.investmentsUsed === 0} hint={i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : `Imposto de ${pct(i.capitalGainsTaxPct, 0)} sobre o ganho`} />
+          <NumberField label="Mais-valia latente" value={i.investmentsGainPct} onChange={(v) => set('investmentsGainPct', v)} suffix="% do valor" step={1} min={0} max={100} disabled={i.investmentsUsed === 0 || synced} hint={synced ? 'Calculado a partir das mais-valias tributáveis' : i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : `Imposto de ${pct(i.capitalGainsTaxPct, 0)} sobre o ganho`} />
           <NumberField label="Fundo de emergência" value={i.emergencyReserve} onChange={(v) => set('emergencyReserve', v)} suffix="€" step={1000} min={0} />
         </div>
         <NumberField
@@ -272,38 +278,6 @@ export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
               )}
             </>
           }
-        />
-      </Section>
-
-      {/* ---------------- CUSTOS DE AQUISIÇÃO ---------------- */}
-      <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} badge={<span className="pill">{eur(m.upfrontTotal)}</span>}>
-        <div className="row2">
-          <NumberField
-            label="Escritura + registos"
-            value={i.deedAndRegistry}
-            onChange={(v) => set('deedAndRegistry', v)}
-            suffix="€"
-            step={25}
-            min={0}
-            source="casa-pronta"
-            hint={m.registryDiscount > 0 ? `Casa Pronta compra + hipoteca, antes do desconto jovem (−${eur(m.registryDiscount)})` : 'Casa Pronta compra + hipoteca'}
-          />
-          <NumberField label="Solicitador / advogado" value={i.solicitorFee} onChange={(v) => set('solicitorFee', v)} suffix="€" step={50} min={0} hint="Opcional" />
-        </div>
-        <div className="row2">
-          <NumberField label="Avaliação bancária" value={i.valuationFee} onChange={(v) => set('valuationFee', v)} suffix="€" step={10} min={0} source="precarios" hint="Valor do preçário, sem os 4% de IS" />
-          <NumberField label="Dossier e formalização" value={i.bankSetupFees} onChange={(v) => set('bankSetupFees', v)} suffix="€" step={10} min={0} source="precarios" hint="Preçário, sem IS. Muitos bancos isentam até 35 anos" />
-        </div>
-        <NumberField
-          label="Imposto do Selo sobre o crédito"
-          value={i.stampLoanPct}
-          onChange={(v) => set('stampLoanPct', v)}
-          suffix="%"
-          step={0.1}
-          min={0}
-          max={5}
-          source="imposto-selo"
-          hint="0,6% para prazos ≥ 5 anos; 0,5% entre 1 e 5 anos"
         />
       </Section>
 
@@ -437,6 +411,38 @@ export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
           </div>
         </Section>
       )}
+
+      {/* ---------------- CUSTOS DE AQUISIÇÃO ---------------- */}
+      <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} badge={<span className="pill">{eur(m.upfrontTotal)}</span>}>
+        <div className="row2">
+          <NumberField
+            label="Escritura + registos"
+            value={i.deedAndRegistry}
+            onChange={(v) => set('deedAndRegistry', v)}
+            suffix="€"
+            step={25}
+            min={0}
+            source="casa-pronta"
+            hint={m.registryDiscount > 0 ? `Casa Pronta compra + hipoteca, antes do desconto jovem (−${eur(m.registryDiscount)})` : 'Casa Pronta compra + hipoteca'}
+          />
+          <NumberField label="Solicitador / advogado" value={i.solicitorFee} onChange={(v) => set('solicitorFee', v)} suffix="€" step={50} min={0} hint="Opcional" />
+        </div>
+        <div className="row2">
+          <NumberField label="Avaliação bancária" value={i.valuationFee} onChange={(v) => set('valuationFee', v)} suffix="€" step={10} min={0} source="precarios" hint="Valor do preçário, sem os 4% de IS" />
+          <NumberField label="Dossier e formalização" value={i.bankSetupFees} onChange={(v) => set('bankSetupFees', v)} suffix="€" step={10} min={0} source="precarios" hint="Preçário, sem IS. Muitos bancos isentam até 35 anos" />
+        </div>
+        <NumberField
+          label="Imposto do Selo sobre o crédito"
+          value={i.stampLoanPct}
+          onChange={(v) => set('stampLoanPct', v)}
+          suffix="%"
+          step={0.1}
+          min={0}
+          max={5}
+          source="imposto-selo"
+          hint="0,6% para prazos ≥ 5 anos; 0,5% entre 1 e 5 anos"
+        />
+      </Section>
 
       {/* ---------------- AMORTIZAÇÕES ---------------- */}
       <Section icon={<IconArrowDownCircle />} title="Amortizações antecipadas" keywords={SECTION_KEYWORDS.amortizacoes} open badge={<span className="pill">{i.goalEnabled ? `Objetivo ${i.targetYears} anos` : i.extraPlan.enabled ? 'Plano manual' : 'Sem plano'}</span>}>
@@ -608,7 +614,10 @@ export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
             <div>
               <span className="muted small">Esforço total</span>
               <b className={`effort-${m.effortStatus}`}>{pct(m.effortTotal, 0)}</b>
-              <span className="hint">Casa + amortizações + dívidas ÷ rendimento. {m.monthlySpare >= 0 ? `Sobram ${eur(m.monthlySpare)}/mês.` : `Faltam ${eur(-m.monthlySpare)}/mês.`}</span>
+              <span className="hint">
+                Casa + amortizações + dívidas ÷ rendimento. {m.monthlySpare >= 0 ? `Sobram ${eur(m.monthlySpare)}/mês` : `Faltam ${eur(-m.monthlySpare)}/mês`}
+                {m.spareAfterLiving !== null ? `; ${m.spareAfterLiving >= 0 ? 'sobram' : 'faltam'} ${eur(Math.abs(m.spareAfterLiving))} depois das despesas do dia a dia.` : '.'}
+              </span>
             </div>
             <div>
               <span className="muted small">Taxa de esforço BdP</span>
@@ -624,6 +633,8 @@ export function InputsPanel({ inputs: i, set, patch, model: m }: Props) {
         </span>
       </Section>
 
+      {/* ---------------- DESPESAS DO DIA A DIA ---------------- */}
+      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} />
       </SearchContext.Provider>
     </aside>
   );
@@ -733,6 +744,34 @@ function AvailableBreakdown({ i, m, set }: { i: Inputs; m: Model; set: Props['se
       <span className="avail-val">−{eur(i.emergencyReserve)}</span>
       <b className="avail-total">Disponível para a entrada</b>
       <b className="avail-total">{eur(m.availableForDownPayment)}</b>
+    </div>
+  );
+}
+
+/** Estado da ligação à app de Finanças (no topo dos capitais próprios) */
+function FinanceLink({ finance, synced, on, setOn }: { finance: FinanceSync; synced: boolean; on: boolean; setOn: (v: boolean) => void }) {
+  // Em desenvolvimento (sem API) não mostra nada
+  if (finance.status === 'loading' || (finance.status === 'unavailable' && finance.reason === 'no_api')) return null;
+  if (finance.status === 'unavailable')
+    return (
+      <div className="finance-link off">
+        <span>
+          App de Finanças não ligada <span className="muted">({finance.reason === 'access_not_configured' ? 'falta configurar o Cloudflare Access' : finance.reason})</span>
+        </span>
+      </div>
+    );
+  const d = finance.data;
+  return (
+    <div className={`finance-link${synced ? ' on' : ''}`}>
+      <Check checked={on} onChange={setOn}>
+        <b>Usar os valores da app de Finanças</b>
+      </Check>
+      <span className="small muted">
+        {eur(d.liquid)} líquidos · {eur(d.invested)} investidos · {d.recurring.length} despesas recorrentes ·{' '}
+        <a href={FINANCE_APP_URL} target="_blank" rel="noreferrer">
+          abrir ↗
+        </a>
+      </span>
     </div>
   );
 }
