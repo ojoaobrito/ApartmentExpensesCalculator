@@ -9,7 +9,8 @@ import { compute } from './model';
 import { RESEARCH_DATE } from './data/market';
 import { duration, eur, eurC } from './lib/format';
 import { InputsPanel } from './components/InputsPanel';
-import { Alerts, Kpis, SummaryTab } from './components/Summary';
+import { Kpis, SummaryTab } from './components/Summary';
+import { AlertsBar } from './components/AlertsBar';
 import { ScheduleTable } from './components/ScheduleTable';
 import { ChartsTab, ScenariosTab, SourcesTab } from './components/Tabs';
 import { AlertsSkeleton, KpisSkeleton, PanelSkeleton } from './components/LoadingSkeletons';
@@ -175,7 +176,7 @@ export default function App() {
           ) : (
             <div className="skel-done results-top">
               <Kpis m={model} i={effective} noOther={modelNoOther} />
-              <Alerts m={model} />
+              <AlertsBar m={model} />
             </div>
           )}
           <nav className="tabs" role="tablist" ref={navRef}>

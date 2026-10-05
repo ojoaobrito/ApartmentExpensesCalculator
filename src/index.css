@@ -449,3 +449,47 @@ body.sorting, body.sorting * { cursor: grabbing !important; user-select: none !i
 .sc-term svg { color: var(--text-3); }
 .sc-term-from { color: var(--text-3); font-weight: 500; }
 .sc-loan { color: var(--text-2); font-weight: 650; }
+
+/* Janela (igual à da app de Finanças) */
+dialog.modal { width: min(760px, calc(100vw - 32px)); max-height: min(86vh, 860px); padding: 0; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--text); box-shadow: 0 24px 64px rgb(0 0 0 / 0.22); display: flex; flex-direction: column; overflow: hidden; animation: modal-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+dialog.modal:not([open]) { display: none; }
+dialog.modal::backdrop { background: rgb(10 10 10 / 0.38); backdrop-filter: blur(3px); animation: fade-in 0.2s ease; }
+dialog.modal.closing { animation: modal-out 0.16s ease forwards; }
+dialog.modal.closing::backdrop { animation: fade-out 0.16s ease forwards; }
+@keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } }
+@keyframes modal-out { to { opacity: 0; transform: translateY(8px) scale(0.98); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { dialog.modal, dialog.modal::backdrop { animation: none !important; } }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 22px 14px; border-bottom: 1px solid var(--border); }
+.modal-head h2 { font-size: 18px; margin-bottom: 2px; }
+.modal-body { overflow: auto; padding: 8px 22px 18px; display: flex; flex-direction: column; gap: 6px; }
+.modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 22px; border-top: 1px solid var(--border); background: var(--surface-2); }
+dialog.modal { animation: modal-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.modal-close { display: grid; place-items: center; padding: 6px; border-radius: 8px; }
+.modal-close:hover { background: var(--surface-2); }
+@media (max-width: 640px) { .modal-head, .modal-body, .modal-foot { padding-left: 16px; padding-right: 16px; } }
+
+/* Avisos e notas compactos */
+.alerts-bar { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid transparent; font: inherit; font-size: 13px; color: var(--text); text-align: left; cursor: pointer; transition: border-color 0.15s, filter 0.15s; }
+.alerts-bar:hover { filter: brightness(1.06); }
+.alerts-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.alerts-bar.warn { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.alerts-bar.crit { background: var(--crit-soft); border-color: color-mix(in srgb, var(--crit) 40%, transparent); }
+.alerts-bar.info { background: var(--accent-soft); }
+.alerts-bar .a-icon { flex: none; display: grid; place-items: center; }
+.alerts-bar.warn .a-icon { color: var(--warn); }
+.alerts-bar.crit .a-icon { color: var(--crit); }
+.alerts-bar.info .a-icon { color: var(--accent); }
+.alerts-counts { flex: none; display: flex; gap: 4px; }
+.alerts-count { padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.alerts-count.crit { color: var(--crit); background: color-mix(in srgb, var(--crit) 16%, transparent); }
+.alerts-count.warn { color: var(--warn-text); background: color-mix(in srgb, var(--warn) 22%, transparent); }
+.alerts-count.info { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.alerts-top { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text-2); }
+.alerts-more { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 600; color: var(--text-2); }
+.alerts-bar:hover .alerts-more { color: var(--text); }
+.alerts-group { display: flex; flex-direction: column; gap: 8px; }
+.alerts-group-title { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-3); margin: 12px 0 0; }
+@media (max-width: 640px) { .alerts-bar { flex-wrap: wrap; } .alerts-top { flex-basis: 100%; order: 3; } }
+.modal-foot > .btn:last-child { margin-left: auto; }

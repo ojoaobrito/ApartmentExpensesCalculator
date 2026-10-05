@@ -18,7 +18,6 @@ function heroStyle(m: Model) {
 }
 import { RULES } from '../data/market';
 import { duration, eur, eurC, pct } from '../lib/format';
-import { Alert } from './ui';
 
 type KRow = { label: string; value: string; tone?: 'good' | 'bad' };
 
@@ -192,24 +191,6 @@ export function Kpis({ m, i, noOther }: { m: Model; i: Inputs; noOther?: Model |
           }
         />
       </div>
-    </div>
-  );
-}
-
-export function Alerts({ m }: { m: Model }) {
-  if (!m.alerts.length)
-    return (
-      <div className="alerts">
-        <Alert kind="ok">Tudo dentro das regras do Banco de Portugal e com o fundo de emergência intacto.</Alert>
-      </div>
-    );
-  return (
-    <div className="alerts">
-      {m.alerts.map((a, idx) => (
-        <Alert key={idx} kind={a.kind}>
-          {a.text}
-        </Alert>
-      ))}
     </div>
   );
 }

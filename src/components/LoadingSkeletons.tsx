@@ -40,8 +40,7 @@ export function KpisSkeleton() {
 export function AlertsSkeleton() {
   return (
     <div className="alerts" aria-hidden>
-      <Skeleton h={44} r={10} />
-      <Skeleton h={44} r={10} />
+      <Skeleton h={40} r={10} />
     </div>
   );
 }
