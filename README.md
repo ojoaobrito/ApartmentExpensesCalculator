@@ -152,7 +152,7 @@ Quem entra pelo Cloudflare Access é identificado pelo email (`/api/me`):
 yarn wrangler pages secret put OWNER_EMAILS --project-name simulador-casa
 ```
 
-Cada cenário guarda tudo o que está no ecrã: todos os parâmetros (incluindo o anúncio e as despesas), os valores da app de Finanças dessa altura e as secções abertas. Ao carregar, repõe-se exatamente isso.
+Cada cenário guarda tudo o que está no ecrã: todos os parâmetros (incluindo o anúncio e as despesas), os valores da app de Finanças dessa altura e as secções abertas. Ao carregar, repõe-se tudo isso; se a ligação à app de Finanças estiver ativa, mantém-se e usa os valores de hoje.
 
 ## Arquitetura
 

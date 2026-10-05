@@ -213,8 +213,8 @@ export default function App() {
                 openSections: [...document.querySelectorAll('details.section[open] .sec-title')].map((el) => el.textContent ?? ''),
               })}
               onLoad={(s) => {
-                // Repõe exatamente o que foi gravado: os valores da app de Finanças ficam os da altura
-                replace(withDefaults({ ...s.inputs, useFinanceData: false }, kind ?? 'guest'));
+                // Repõe o cenário, mas a ligação à app de Finanças fica como está (valores de hoje)
+                replace(withDefaults({ ...s.inputs, useFinanceData: inputs.useFinanceData }, kind ?? 'guest'));
                 const open = s.extras?.openSections;
                 if (open)
                   for (const d of document.querySelectorAll<HTMLDetailsElement>('details.section'))

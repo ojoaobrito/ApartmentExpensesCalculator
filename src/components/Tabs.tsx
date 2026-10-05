@@ -358,7 +358,7 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
         </div>
       </div>
       <div className="sc-actions">
-        <button className="btn small" onClick={onLoad} title="Repõe tudo como estava ao gravar (valores, anúncio, despesas e secções abertas)">
+        <button className="btn small" onClick={onLoad} title="Repõe o cenário (anúncio, crédito, plano, despesas e secções abertas); com a app de Finanças ligada usa os valores de hoje">
           Carregar
         </button>
         <button className="btn small sc-icon" onClick={onOverwrite} title="Gravar o ecrã atual por cima" aria-label={`Atualizar ${s.name} com o ecrã atual`}>
