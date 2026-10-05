@@ -224,6 +224,12 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
               m.investmentsTax > 0 ? (
                 <>
                   Imposto ao vender: {pct(i.capitalGainsTaxPct, 0)} sobre {eur((i.investmentsUsed * i.investmentsGainPct) / 100)} de ganho = <b>{eur(m.investmentsTax)}</b>
+                  {synced && finance.data?.liquidTax ? (
+                    <>
+                      {' '}
+                      + {eur(finance.data.liquidTax)} de IRS sobre juros (já tirado da poupança) = <b>{eur(m.investmentsTax + finance.data.liquidTax)}</b> no total
+                    </>
+                  ) : null}
                 </>
               ) : undefined
             }
