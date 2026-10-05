@@ -199,7 +199,17 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
         >
           {owner && <FinanceLink finance={finance} synced={synced} on={i.useFinanceData} setOn={(v) => set('useFinanceData', v)} />}
           <div className="row2">
-            <NumberField label="Poupança (liquidez)" value={i.cash} onChange={(v) => set('cash', v)} suffix="€" step={1000} min={0} disabled={synced} loading={pending} hint={synced ? 'Da app de Finanças' : undefined} />
+            <NumberField
+              label="Poupança (liquidez)"
+              value={i.cash}
+              onChange={(v) => set('cash', v)}
+              suffix="€"
+              step={1000}
+              min={0}
+              disabled={synced}
+              loading={pending}
+              hint={synced ? (finance.data?.liquidTax ? `Da app de Finanças, já sem ${eur(finance.data.liquidTax)} de IRS sobre juros` : 'Da app de Finanças') : undefined}
+            />
             <NumberField label="Investimentos" value={i.investments} onChange={(v) => patch({ investments: v, investmentsUsed: Math.min(i.investmentsUsed, v) })} suffix="€" step={1000} min={0} disabled={synced} loading={pending} hint={synced ? 'Da app de Finanças' : undefined} />
           </div>
           <NumberField

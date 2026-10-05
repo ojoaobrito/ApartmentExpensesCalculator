@@ -12,6 +12,8 @@ export interface FinanceSummary {
   invested: number;
   taxableGains: number;
   taxableGainsPctOfInvested: number;
+  /** IRS a pagar sobre juros de contas (sai da liquidez) */
+  liquidTax?: number;
   netWorth: number;
   accounts: { id: string; name: string; kind: 'liquidez' | 'investimento'; value: number; gains: number | null; taxable: boolean }[];
   recurring: { id: string; name: string; category: string; amount: number; frequency: 'mensal' | 'anual'; month: number | null; investment: boolean }[];
@@ -60,7 +62,8 @@ export function applyFinance(inp: Inputs, f: FinanceSummary): Inputs {
   }));
   return {
     ...inp,
-    cash: f.liquid,
+    // Os juros pagos em bruto (p.ex. Trade Republic) ainda pagam IRS: esse valor não está disponível
+    cash: Math.max(0, f.liquid - (f.liquidTax ?? 0)),
     investments: f.invested,
     investmentsUsed: Math.min(inp.investmentsUsed, f.invested),
     investmentsGainPct: f.taxableGainsPctOfInvested,
