@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { Skeleton } from './Skeleton';
-import { X } from 'lucide-react';
+import { Pencil, RefreshCw, Wallet, X } from 'lucide-react';
+import { heroColors } from '../lib/effortColor';
 import { withDefaults, type Inputs } from '../state';
 import { exportScenarios, parseScenarioFile, type SavedScenario, type ScenarioExtras, type useScenarios } from '../storage';
-import { compute, type Model } from '../model';
+import { compute, EFFORT_LABEL, type Model } from '../model';
 import { yearly } from '../lib/loan';
 import { duration, eur, eurC, pct, pctAxis, pctFmt } from '../lib/format';
 import { RESEARCH_DATE, SOURCES } from '../data/market';
@@ -171,43 +172,22 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
           )}
           {store.list.length === 0 && store.mode !== 'loading' && <div className="empty">Ainda não tens cenários gravados.</div>}
           {store.list.map((s) => (
-            <div key={s.id} className="scenario-item">
-              <span className="name">{s.name}</span>
-              <span className="muted small">
-                {new Date(s.savedAt).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}
-                {s.extras?.finance && ' · com os valores da app de Finanças dessa altura'}
-              </span>
-              <button className="btn small" onClick={() => props.onLoad(s)} title="Repõe tudo como estava ao gravar (valores, anúncio, despesas e secções abertas)">
-                Carregar
-              </button>
-              <button
-                className="btn small"
-                title="Grava os parâmetros atuais por cima deste cenário"
-                onClick={() => {
-                  if (confirm(`Substituir "${s.name}" pelos parâmetros atuais?`)) void store.overwrite(s.id, props.inputs, props.extras());
-                }}
-              >
-                Atualizar
-              </button>
-              <button
-                className="btn small"
-                onClick={() => {
-                  const n = prompt('Novo nome', s.name);
-                  if (n && n.trim()) void store.rename(s.id, n.trim());
-                }}
-              >
-                Renomear
-              </button>
-              <button
-                className="btn small"
-                aria-label={`Apagar ${s.name}`}
-                onClick={() => {
-                  if (confirm(`Apagar "${s.name}"?`)) void store.remove(s.id);
-                }}
-              >
-                <X size={14} strokeWidth={2} />
-              </button>
-            </div>
+            <ScenarioRow
+              key={s.id}
+              s={s}
+              m={cols.find((c) => c.id === s.id)!.model}
+              onLoad={() => props.onLoad(s)}
+              onOverwrite={() => {
+                if (confirm(`Substituir "${s.name}" pelo que está agora no ecrã?`)) void store.overwrite(s.id, props.inputs, props.extras());
+              }}
+              onRename={() => {
+                const n = prompt('Novo nome', s.name);
+                if (n && n.trim()) void store.rename(s.id, n.trim());
+              }}
+              onRemove={() => {
+                if (confirm(`Apagar "${s.name}"?`)) void store.remove(s.id);
+              }}
+            />
           ))}
         </div>
 
@@ -308,6 +288,66 @@ export function SourcesTab() {
         <li>Juros de crédito habitação contratado após 2011 não são dedutíveis no IRS. Juros de crédito habitação estão isentos de Imposto do Selo.</li>
         <li>Não consegui ler o anúncio do idealista (o site bloqueia acessos automáticos): confirma VPT, condomínio e município no anúncio / caderneta predial.</li>
       </ul>
+    </div>
+  );
+}
+
+/** Uma linha da lista de cenários: veredito, números principais e ações */
+function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: SavedScenario; m: Model; onLoad: () => void; onOverwrite: () => void; onRename: () => void; onRemove: () => void }) {
+  const w = m.withExtras;
+  const c = heroColors(m.effortStatus === 'none' ? null : m.effortTotal);
+  const crit = m.alerts.filter((a) => a.kind === 'crit').length;
+  const spare = m.spareAfterAll ?? m.spareAfterLiving ?? (m.effortStatus === 'none' ? null : m.monthlySpare);
+  const figures = [
+    { label: 'Por mês', value: eurC(m.monthlyTotal + m.extraMonthlyEquivalent) },
+    { label: 'Escritura', value: eur(m.cashNeeded) },
+    { label: 'Liquidado em', value: duration(w.payoffMonth) },
+    { label: 'Juros', value: eur(w.totalInterest) },
+    spare !== null && { label: spare < 0 ? 'Falta por mês' : 'Sobra por mês', value: spare < 0 ? `−${eur(-spare)}` : eur(spare), bad: spare < 0 },
+  ].filter((f): f is { label: string; value: string; bad?: boolean } => !!f);
+  return (
+    <div className="scenario-item" style={{ ['--tone' as string]: c.solid, ['--tone-ink' as string]: c.ink }}>
+      <div className="sc-main">
+        <div className="sc-head">
+          <span className="sc-name">{s.name}</span>
+          <span className="sc-verdict">
+            {EFFORT_LABEL[m.effortStatus]}
+            {m.effortStatus !== 'none' && <> · {pct(m.effortTotal, 0)} do rendimento</>}
+          </span>
+          {crit > 0 && <span className="pill crit">{crit === 1 ? '1 alerta crítico' : `${crit} alertas críticos`}</span>}
+        </div>
+        <div className="sc-meta">
+          {new Date(s.savedAt).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}
+          {s.inputs.price > 0 && <> · casa de {eur(s.inputs.price)}</>}
+          {s.extras?.finance && (
+            <span className="sc-tag" title={`Valores da app de Finanças de ${new Date(s.extras.finance.updatedAt).toLocaleDateString('pt-PT')}`}>
+              <Wallet size={11} strokeWidth={2.2} aria-hidden /> valores da app de Finanças
+            </span>
+          )}
+        </div>
+        <div className="sc-figures">
+          {figures.map((f) => (
+            <div key={f.label}>
+              <span>{f.label}</span>
+              <b className={f.bad ? 'bad' : undefined}>{f.value}</b>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="sc-actions">
+        <button className="btn small" onClick={onLoad} title="Repõe tudo como estava ao gravar (valores, anúncio, despesas e secções abertas)">
+          Carregar
+        </button>
+        <button className="btn small sc-icon" onClick={onOverwrite} title="Gravar o ecrã atual por cima" aria-label={`Atualizar ${s.name} com o ecrã atual`}>
+          <RefreshCw size={14} strokeWidth={2} />
+        </button>
+        <button className="btn small sc-icon" onClick={onRename} title="Renomear" aria-label={`Renomear ${s.name}`}>
+          <Pencil size={14} strokeWidth={2} />
+        </button>
+        <button className="btn small sc-icon danger" onClick={onRemove} title="Apagar" aria-label={`Apagar ${s.name}`}>
+          <X size={15} strokeWidth={2.2} />
+        </button>
+      </div>
     </div>
   );
 }
