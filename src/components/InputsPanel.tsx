@@ -210,21 +210,15 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
             step={1000}
             min={0}
             max={i.investments}
-            hint={m.investmentsTax > 0 ? `Imposto estimado sobre mais-valias ao resgatar: ${eur(m.investmentsTax)}` : undefined}
+            hint={
+              m.investmentsTax > 0 ? (
+                <>
+                  Imposto ao vender: {pct(i.capitalGainsTaxPct, 0)} sobre {eur((i.investmentsUsed * i.investmentsGainPct) / 100)} de ganho = <b>{eur(m.investmentsTax)}</b>
+                </>
+              ) : undefined
+            }
           />
           <div className="row2">
-            <NumberField
-              label="Parte do valor que é ganho"
-              value={i.investmentsGainPct}
-              onChange={(v) => set('investmentsGainPct', v)}
-              suffix="%"
-              step={1}
-              min={0}
-              max={100}
-              disabled={i.investmentsUsed === 0 || synced}
-              loading={pending}
-              hint={synced ? 'Da app de Finanças: mais-valias ÷ valor investido. Não é a taxa de imposto.' : i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : 'Mais-valias ÷ valor investido. Só o ganho paga imposto.'}
-            />
             <NumberField
               label="Imposto sobre mais-valias"
               value={i.capitalGainsTaxPct}
@@ -235,8 +229,22 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
               max={100}
               disabled={synced}
               loading={pending}
-              hint={synced ? 'Da app de Finanças' : 'Taxa liberatória: 28%'}
+              hint="Só sobre o ganho, não sobre o valor vendido"
             />
+            {/* Sem a app de Finanças, é preciso dizer quanto dos investimentos é ganho */}
+            {!synced && i.investments > 0 && (
+              <NumberField
+                label="Desse valor, é ganho"
+                value={Math.round(i.investments * i.investmentsGainPct) / 100}
+                onChange={(v) => set('investmentsGainPct', i.investments > 0 ? Math.min(100, Math.max(0, (v / i.investments) * 100)) : 0)}
+                suffix="€"
+                step={500}
+                min={0}
+                max={i.investments}
+                loading={pending}
+                hint="Mais-valias por realizar"
+              />
+            )}
           </div>
           <div className="row2">
             <NumberField label="Fundo de emergência" value={i.emergencyReserve} onChange={(v) => set('emergencyReserve', v)} suffix="€" step={1000} min={0} />
