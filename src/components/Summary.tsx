@@ -13,8 +13,29 @@ import { RULES } from '../data/market';
 import { duration, eur, eurC, pct } from '../lib/format';
 import { Alert } from './ui';
 
+type KRow = { label: string; value: string; tone?: 'good' | 'bad' };
+
+/** Discriminação de um cartão: uma linha por parcela, com marcador */
+function KList({ rows }: { rows: (KRow | false)[] }) {
+  return (
+    <ul className="k-list">
+      {rows.filter((r): r is KRow => !!r).map((r) => (
+        <li key={r.label} className={r.tone}>
+          <span>{r.label}</span>
+          {r.value && <b>{r.value}</b>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function Kpis({ m, i }: { m: Model; i: Inputs }) {
   const w = m.withExtras;
+  const up = (...keys: string[]) => m.upfront.filter((c) => keys.includes(c.key)).reduce((t, c) => t + c.value, 0);
+  const spareCash = m.cashLeft - i.emergencyReserve;
+  const earlyMonths = i.termYears * 12 - w.payoffMonth;
+  // O que sai no crédito além de capital, juros e seguros (comissões e respetivo selo)
+  const loanOther = w.totalOutflow - m.principal - w.totalInterest - w.totalInsurance;
   return (
     <div className="kpis">
       <div className={`kpi hero status-${m.effortStatus}`} style={heroStyle(m)}>
@@ -60,42 +81,88 @@ export function Kpis({ m, i }: { m: Model; i: Inputs }) {
       <div className="kpi">
         <div className="k-label">Dinheiro na escritura</div>
         <div className="k-value">{eur(m.cashNeeded)}</div>
-        <div className="k-sub">
-          Entrada {eur(m.downPayment)} + custos {eur(m.upfrontTotal)}
-        </div>
+        <KList
+          rows={[
+            { label: 'Entrada', value: eur(m.downPayment) },
+            { label: m.youngSavings > 0 ? 'Impostos (IMT Jovem)' : 'Impostos', value: eur(up('imt', 'imtCessao', 'isCompra', 'isCredito')) },
+            { label: 'Escritura e registos', value: eur(up('escritura', 'solicitador')) },
+            up('avaliacao', 'dossier') > 0 && { label: 'Banco', value: eur(up('avaliacao', 'dossier')) },
+            up('obras', 'recheio') > 0 && { label: 'Obras e recheio', value: eur(up('obras', 'recheio')) },
+          ]}
+        />
       </div>
       <div className="kpi">
         <div className="k-label">Fica de reserva</div>
         <div className="k-value" style={m.cashLeft < 0 ? { color: 'var(--crit)' } : undefined}>
           {m.cashLeft >= 0 ? eur(m.cashLeft) : `−${eur(-m.cashLeft)}`}
         </div>
-        <div className="k-sub">
-          Liquidez{m.investmentsLeft > 0 ? ` + ${eur(m.investmentsLeft)} ainda investidos` : ''}
-        </div>
+        <KList
+          rows={[
+            { label: 'Fundo de emergência', value: eur(Math.abs(spareCash) < 1 ? m.cashLeft : Math.max(0, Math.min(m.cashLeft, i.emergencyReserve))) },
+            Math.abs(spareCash) >= 1 &&
+              (spareCash > 0 ? { label: 'Livre', value: eur(spareCash) } : { label: 'Falta para o fundo', value: `−${eur(-spareCash)}`, tone: 'bad' }),
+            m.investmentsLeft > 0 && { label: 'Investimentos (à parte)', value: eur(m.investmentsLeft) },
+          ]}
+        />
       </div>
       <div className="kpi">
         <div className="k-label">Crédito liquidado em</div>
         <div className="k-value">{duration(w.payoffMonth)}</div>
-        <div className="k-sub">
-          {i.goalEnabled ? `Objetivo: ${i.targetYears} anos · ` : ''}crédito de {eur(m.principal)} (LTV {m.ltv.toFixed(0)}%) · contrato {i.termYears} anos
-        </div>
+        <KList
+          rows={[
+            i.goalEnabled && { label: 'Objetivo', value: `${i.targetYears} anos` },
+            { label: 'Crédito', value: eur(m.principal) },
+            { label: 'LTV', value: pct(m.ltv, 0) },
+            { label: 'Contrato', value: `${i.termYears} anos` },
+            earlyMonths >= 12 && { label: 'Antecipação', value: duration(earlyMonths), tone: 'good' },
+          ]}
+        />
       </div>
       <div className="kpi">
         <div className="k-label">Juros totais</div>
         <div className="k-value">{eur(w.totalInterest)}</div>
-        <div className="k-sub">{m.interestSaved > 1 ? `Poupas ${eur(m.interestSaved)} vs não amortizar` : 'Sem amortizações antecipadas'}</div>
+        <KList
+          rows={
+            m.interestSaved > 1
+              ? [
+                  { label: 'Sem amortizar', value: eur(m.noExtras.totalInterest) },
+                  { label: 'Poupança', value: `−${eur(m.interestSaved)}`, tone: 'good' },
+                  w.totalExtraFees > 0 && { label: 'Comissões', value: eur(w.totalExtraFees) },
+                  { label: 'TAN inicial', value: pct(m.firstTan) },
+                ]
+              : [{ label: 'Sem amortizações antecipadas', value: '' }, { label: 'TAN inicial', value: pct(m.firstTan) }]
+          }
+        />
       </div>
       <div className="kpi">
         <div className="k-label">Custo total da compra</div>
         <div className="k-value">{eur(m.downPayment + m.upfrontTotal + w.totalOutflow)}</div>
-        <div className="k-sub">TAEG {pct(m.taeg)} · entrada, custos, juros, seguros</div>
+        <KList
+          rows={[
+            { label: 'Entrada e custos', value: eur(m.downPayment + m.upfrontTotal) },
+            { label: 'Capital', value: eur(m.principal) },
+            { label: 'Juros', value: eur(w.totalInterest) },
+            { label: 'Seguros', value: eur(w.totalInsurance) },
+            loanOther >= 1 && { label: 'Comissões', value: eur(loanOther) },
+            { label: 'TAEG', value: pct(m.taeg) },
+          ]}
+        />
       </div>
       <div className="kpi">
         <div className="k-label">Taxa de esforço</div>
         <div className="k-value">{i.netMonthlyIncome > 0 ? pct(m.dsti, 1) : '—'}</div>
-        <div className="k-sub">
-          {i.netMonthlyIncome > 0 ? `Stress test: ${pct(m.dstiStress, 1)} (máx. ${RULES.dstiLimit}%)` : 'Indica o rendimento'}
-        </div>
+        <KList
+          rows={
+            i.netMonthlyIncome > 0
+              ? [
+                  { label: 'Rendimento', value: `${eur(i.netMonthlyIncome)}/mês` },
+                  { label: `Stress test +${m.stressPp.toFixed(1).replace('.', ',')} p.p.`, value: pct(m.dstiStress, 1), tone: m.dstiStress > RULES.dstiLimit ? 'bad' : undefined },
+                  { label: 'Limite BdP', value: `${RULES.dstiLimit}%` },
+                  m.extraMonthlyEquivalent > 0 && { label: 'Com amortizações', value: pct(m.effortTotal, 1) },
+                ]
+              : [{ label: 'Indica o rendimento', value: '' }]
+          }
+        />
       </div>
     </div>
   );

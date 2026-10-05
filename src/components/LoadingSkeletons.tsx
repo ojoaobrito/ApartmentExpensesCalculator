@@ -24,8 +24,12 @@ export function KpisSkeleton() {
         <div key={k} className="kpi">
           <Skeleton w={110} h={10} style={{ marginTop: 2 }} />
           <Skeleton w={['55%', '50%', '62%', '48%', '52%', '40%'][k]} h={22} r={6} style={{ margin: '7px 0 7px' }} />
-          <Skeleton w={['80%', '62%', '90%', '72%', '85%', '76%'][k]} h={9} />
-          <Skeleton w={['45%', '38%', '30%', '42%', '50%', '34%'][k]} h={9} style={{ marginTop: 8 }} />
+          {[0, 1, 2, 3, 4].map((r) => (
+            <div key={r} className="skel-kv" style={{ padding: '4px 0', border: 0 }}>
+              <Skeleton w={ROW_W[(k + r) % ROW_W.length]} h={9} />
+              <Skeleton w={52} h={9} />
+            </div>
+          ))}
         </div>
       ))}
     </Loading>

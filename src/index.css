@@ -380,6 +380,16 @@ body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, col
 .results-top { display: flex; flex-direction: column; gap: 16px; }
 .living-skel { display: flex; flex-direction: column; gap: 4px; }
 .skel-hero { --hero-solid: var(--text-3); }
-.kpis.skel-zone .kpi:not(.hero) { min-height: 150px; }
+.kpis.skel-zone .kpi:not(.hero) { min-height: 190px; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .mobile-bar .skel { --skel: rgb(255 255 255 / 0.22); --skel-hi: rgb(255 255 255 / 0.4); }
+
+/* Discriminação dos cartões do topo */
+.k-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-2); }
+.k-list li { position: relative; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-left: 11px; }
+.k-list li::before { content: ''; position: absolute; left: 1px; top: 0.55em; width: 5px; height: 5px; border-radius: 50%; background: var(--text-3); }
+.k-list li span { min-width: 0; }
+.k-list li b { flex: none; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.k-list li.good b { color: var(--good-text); }
+.k-list li.bad b { color: var(--crit); }
+@media (max-width: 560px) { .kpis { grid-template-columns: minmax(0, 1fr); } .kpi.hero { grid-column: auto; } }
