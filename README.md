@@ -6,7 +6,7 @@
 
 **Simula a compra da tua casa em Portugal antes de assinar: do primeiro euro de entrada à última prestação.**
 
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-2a78d6)](#)
+[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.1.0-2a78d6)](#)
 [![Live](https://img.shields.io/badge/live-simulador--casa.pages.dev-1baf7a)](https://simulador-casa.pages.dev)
 [![Dados](https://img.shields.io/badge/dados%20de%20mercado-out%2F2026-eb6834)](#dados-e-fontes)
 [![Testes](https://img.shields.io/badge/testes-36%20a%20passar-008300)](#qualidade)
