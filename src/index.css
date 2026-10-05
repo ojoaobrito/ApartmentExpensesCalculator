@@ -428,3 +428,15 @@ body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, col
 .sub-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 650; color: var(--text); }
 .sub-title svg { color: var(--accent); }
 .sub-title .pill { font-weight: 500; }
+
+/* Secções reordenáveis */
+.sort-slot { position: relative; }
+.sort-slot.is-dragging { z-index: 5; }
+.sort-slot.is-dragging > details.section { box-shadow: 0 14px 34px rgb(0 0 0 / 0.28); border-color: var(--accent); }
+details.section > summary { position: relative; }
+.drag-handle { position: absolute; left: 0; top: 0; bottom: 0; width: 14px; display: grid; place-items: center; color: var(--text-3); cursor: grab; touch-action: none; opacity: 0; transition: opacity 0.15s, color 0.15s; border-radius: var(--radius) 0 0 var(--radius); }
+details.section > summary:hover .drag-handle, .drag-handle:focus-visible, .sort-slot.is-dragging .drag-handle { opacity: 1; }
+.drag-handle:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.drag-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (hover: none) { .drag-handle { opacity: 0.6; } }
+body.sorting, body.sorting * { cursor: grabbing !important; user-select: none !important; }

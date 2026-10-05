@@ -4,6 +4,7 @@ import { NumberInput } from './NumberInput';
 import { animateDetails } from './motion';
 import { SearchContext } from './search';
 import { Skeleton } from './Skeleton';
+import { DragHandle } from './sortable';
 
 interface NumberFieldProps {
   label: ReactNode;
@@ -119,6 +120,7 @@ export function Section(props: { icon: ReactNode; title: string; keywords?: stri
           animateDetails(d, !d.open || d.classList.contains('is-closing'));
         }}
       >
+        <DragHandle />
         <span className="sec-icon" aria-hidden>
           {props.icon}
         </span>
