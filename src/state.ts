@@ -275,13 +275,17 @@ export function useInputs(kind: ProfileKind | null) {
     return stored ? withDefaults(migrate(stored)) : guestInputs();
   });
   // Primeira visita: aplica os valores iniciais certos assim que se sabe quem é
+  // O dono começa sempre com os valores da app de Finanças ligados (p.ex. depois de ter carregado um cenário)
+  const [syncOn, setSyncOn] = useState(true);
   if (fresh && kind) {
     setFresh(false);
     setFillOther(false);
+    setSyncOn(false);
     setInputs(defaultsFor(kind));
-  } else if (fillOther && kind) {
+  } else if (kind && (fillOther || syncOn)) {
     setFillOther(false);
-    if (kind === 'owner') setInputs((s) => ({ ...s, otherCapital: ownerOtherCapital() }));
+    setSyncOn(false);
+    if (kind === 'owner') setInputs((s) => ({ ...s, useFinanceData: true, ...(fillOther ? { otherCapital: ownerOtherCapital() } : {}) }));
   }
   // Só grava depois de escolhidos os valores iniciais (senão um recarregamento rápido ficava com os de exemplo)
   useEffect(() => {

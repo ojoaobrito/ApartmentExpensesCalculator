@@ -29,6 +29,8 @@ type Theme = 'auto' | 'light' | 'dark';
 export default function App() {
   const profile = useProfile();
   const kind = profile.status === 'ready' ? (profile.owner ? 'owner' : 'guest') : null;
+  // Até se saber quem é, trata como dono para os números ficarem em esqueleto (não saltam);
+  // a ligação à app de Finanças só aparece quando se confirma que é o dono
   const owner = kind !== 'guest';
   const { inputs, awaitingProfile, set, patch, reset, replace } = useInputs(kind);
   const scenarios = useScenarios();
@@ -163,7 +165,7 @@ export default function App() {
         )}
       </div>
       <div className="layout">
-        <InputsPanel inputs={effective} set={set} patch={patch} model={model} finance={finance} synced={synced} pending={pending} owner={owner} />
+        <InputsPanel inputs={effective} set={set} patch={patch} model={model} finance={finance} synced={synced} pending={pending} owner={kind === 'owner'} />
         <main className="results" ref={resultsRef}>
           {pending ? (
             <>
