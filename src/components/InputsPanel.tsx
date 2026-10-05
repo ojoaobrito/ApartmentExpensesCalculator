@@ -326,9 +326,6 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
           suffix="anos"
           min={5}
           max={40}
-          slider
-          sliderMin={5}
-          sliderMax={40}
           hint={`Máximo BdP para ${m.oldest} anos: ${m.maxTermYears} anos. Um prazo longo baixa a prestação e a taxa de esforço; podes encurtá-lo com amortizações.`}
         />
       </Section>
@@ -471,9 +468,6 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
             suffix="anos"
             min={1}
             max={i.termYears}
-            slider
-            sliderMin={1}
-            sliderMax={i.termYears}
             hint={
               m.solvedExtra !== null ? (
                 <>

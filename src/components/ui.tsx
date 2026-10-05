@@ -14,10 +14,6 @@ interface NumberFieldProps {
   min?: number;
   max?: number;
   hint?: ReactNode;
-  slider?: boolean;
-  sliderMin?: number;
-  sliderMax?: number;
-  sliderStep?: number;
   source?: string; // id da fonte (ver data/market.ts)
   disabled?: boolean;
   /** Valor ainda a chegar (mostra um esqueleto no lugar do campo) */
@@ -30,7 +26,7 @@ export function InlineNumber(props: { value: number; onChange: (v: number) => vo
 }
 
 export function NumberField(props: NumberFieldProps) {
-  const { label, value, onChange, suffix, step = 1, min, max, hint, slider, source, disabled, loading } = props;
+  const { label, value, onChange, suffix, step = 1, min, max, hint, source, disabled, loading } = props;
 
   return (
     <label className="field">
@@ -39,18 +35,6 @@ export function NumberField(props: NumberFieldProps) {
         {source && <SourceLink id={source} />}
       </span>
       {loading ? <Skeleton h={36} r={8} /> : <NumberInput value={value} onChange={onChange} step={step} min={min} max={max} suffix={suffix} disabled={disabled} />}
-      {slider && !loading && (
-        <input
-          type="range"
-          min={props.sliderMin ?? min ?? 0}
-          max={props.sliderMax ?? max ?? 100}
-          step={props.sliderStep ?? step}
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
-          aria-label={typeof label === 'string' ? label : undefined}
-        />
-      )}
       {hint && (loading ? <Skeleton w="80%" h={9} style={{ marginTop: 4 }} /> : <span className="hint">{hint}</span>)}
     </label>
   );
