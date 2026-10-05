@@ -9,11 +9,11 @@
 [![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-2a78d6)](#)
 [![Live](https://img.shields.io/badge/live-simulador--casa.pages.dev-1baf7a)](https://simulador-casa.pages.dev)
 [![Dados](https://img.shields.io/badge/dados%20de%20mercado-out%2F2026-eb6834)](#dados-e-fontes)
-[![Testes](https://img.shields.io/badge/testes-27%20a%20passar-008300)](#qualidade)
+[![Testes](https://img.shields.io/badge/testes-36%20a%20passar-008300)](#qualidade)
 
 [**Abrir a app →**](https://simulador-casa.pages.dev)
 
-<img src="docs/screenshots/overview-light.png" alt="Vista geral do Simulador Casa" width="100%" />
+<img src="docs/screenshots/overview-dark.png" alt="Vista geral do Simulador Casa em modo escuro" width="100%" />
 
 </div>
 
