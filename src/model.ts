@@ -6,6 +6,7 @@ import { estimateTAEG, pmt, simulate, solveExtraForTarget, type LoanParams } fro
 import { acquisitionTaxes, imtAssignment } from './lib/taxes';
 import { eur as fmt, eurC, pct } from './lib/format';
 import { summarizeLivingCosts } from './data/livingCosts';
+import { summarizeOtherCapital } from './lib/otherCapital';
 
 export type AlertKind = 'warn' | 'crit' | 'ok' | 'info';
 export interface ModelAlert {
@@ -31,7 +32,8 @@ export function loanParams(inp: Inputs, principal: number): LoanParams {
     euriborPath: euriborPath(inp),
     amortMode: inp.amortMode,
     extraPlan: inp.extraPlan,
-    lumpSums: inp.lumpSums,
+    // Pontuais manuais + as que vêm dos outros capitais (bónus depois da escritura)
+    lumpSums: [...inp.lumpSums, ...summarizeOtherCapital(inp.otherCapital ?? [], inp.deedDate).lumpSums],
     feeVariablePct: inp.feeVariablePct,
     feeFixedPct: inp.feeFixedPct,
     feeVariableWaived: inp.feeVariableWaived,
@@ -101,7 +103,9 @@ function cashFigures(inp: Inputs) {
 
   // ---------- capitais próprios ----------
   const investmentsTax = (inp.investmentsUsed * (inp.investmentsGainPct / 100) * inp.capitalGainsTaxPct) / 100;
-  const available = inp.cash + inp.investmentsUsed - investmentsTax;
+  // Outros capitais que chegam até à escritura (líquidos) também contam
+  const otherAtDeed = summarizeOtherCapital(inp.otherCapital ?? [], inp.deedDate).atDeed;
+  const available = inp.cash + inp.investmentsUsed - investmentsTax + otherAtDeed;
   const cashNeeded = inp.downPayment + upfrontTotal;
   const cashLeft = available - cashNeeded;
   // Capital que pode ir para a entrada depois de impostos, custos, obras, recheio e fundo de emergência
@@ -110,7 +114,7 @@ function cashFigures(inp: Inputs) {
   return {
     principal, valuation, ltv, maxLoan, minDownPayment, pricePerM2, valuationPerM2,
     taxes, stampLoan, bankUpfront, assignmentImt, upfront, upfrontTotal, youngSavings, registryDiscount,
-    investmentsTax, available, cashNeeded, cashLeft, availableForDownPayment, investmentsLeft,
+    investmentsTax, available, cashNeeded, cashLeft, availableForDownPayment, investmentsLeft, otherAtDeed,
   };
 }
 
@@ -118,8 +122,9 @@ function computeWith(inp: Inputs) {
   const {
     principal, valuation, ltv, maxLoan, minDownPayment, pricePerM2, valuationPerM2,
     taxes, stampLoan, bankUpfront, assignmentImt, upfront, upfrontTotal, youngSavings, registryDiscount,
-    investmentsTax, available, cashNeeded, cashLeft, availableForDownPayment, investmentsLeft,
+    investmentsTax, available, cashNeeded, cashLeft, availableForDownPayment, investmentsLeft, otherAtDeed,
   } = cashFigures(inp);
+  const other = summarizeOtherCapital(inp.otherCapital ?? [], inp.deedDate);
 
   // ---------- crédito ----------
   const baseParams = loanParams(inp, principal);
@@ -274,6 +279,8 @@ function computeWith(inp: Inputs) {
     cashLeft,
     availableForDownPayment,
     investmentsLeft,
+    otherAtDeed,
+    other,
     params,
     solvedExtra,
     withExtras,

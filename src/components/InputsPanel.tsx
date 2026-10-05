@@ -8,6 +8,7 @@ import { Check, InlineNumber, NumberField, Section, Segmented, SelectField, Sour
 import { NumberInput } from './NumberInput';
 import { useScrollFade } from './useScrollFade';
 import { LivingCostsSection } from './LivingCostsSection';
+import { OtherCapitalSection } from './OtherCapitalSection';
 import { FINANCE_APP_URL, type FinanceSync } from '../financeSync';
 import { animateDetails } from './motion';
 import { IconArrowDownCircle, IconBank, IconHome, IconPie, IconReceipt, IconSearch, IconTrend, IconUmbrella, IconWallet } from './icons';
@@ -38,6 +39,7 @@ const FREQ = [
 const EFFORT_PILL: Record<Model['effortStatus'], string> = { none: '', ok: 'good', tight: 'warn', hard: 'warn', impossible: 'crit' };
 
 const SECTION_KEYWORDS = {
+  outros: 'outros capitais bónus bonus prémio retenção motorola ações rsu herança escritura prevista data entradas futuras',
   despesas: 'despesas do dia a dia orçamento salário gastos mensais anuais compras supermercado luz gás água internet ginásio carro combustível seguro iuc software subscrições investimentos etf poupança folha google sheet',
   imovel: 'imóvel preço avaliação bancária área m2 metro quadrado anúncio idealista vpt valor patrimonial condomínio imi isenção obras cedência posição contratual prémio cedente',
   capitais: 'capitais próprios e entrada decoração recheio móveis mobília mobiliário eletrodomésticos disponível poupança liquidez investimentos resgatar mais-valia imposto fundo de emergência entrada ltv capital próprio dinheiro',
@@ -282,8 +284,50 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
         />
       </Section>
 
+      {/* ---------------- OUTROS CAPITAIS ---------------- */}
+      <OtherCapitalSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.outros} />
+
+      {/* ---------------- RENDIMENTO ---------------- */}
+      <Section
+        icon={<IconPie />}
+        title="Rendimento e taxa de esforço"
+        keywords={SECTION_KEYWORDS.rendimento}
+        loading={pending}
+        badge={i.netMonthlyIncome > 0 ? <span className={`pill ${EFFORT_PILL[m.effortStatus]}`} title="Esforço total: casa + amortizações + outras dívidas">{m.effortTotal.toFixed(0)}% do rendimento</span> : undefined}
+      >
+        <div className="row2">
+          <NumberField label="Rendimento líquido" value={i.netMonthlyIncome} onChange={(v) => set('netMonthlyIncome', v)} suffix="€/mês" step={100} min={0} />
+          <NumberField label="Outras dívidas" value={i.otherDebtMonthly} onChange={(v) => set('otherDebtMonthly', v)} suffix="€/mês" step={25} min={0} />
+        </div>
+        {i.netMonthlyIncome > 0 && (
+          <div className="effort-stats">
+            <div>
+              <span className="muted small">Esforço total</span>
+              <b className={`effort-${m.effortStatus}`}>{pct(m.effortTotal, 0)}</b>
+              <span className="hint">
+                Casa + amortizações + dívidas ÷ rendimento. {m.monthlySpare >= 0 ? `Sobram ${eur(m.monthlySpare)}/mês` : `Faltam ${eur(-m.monthlySpare)}/mês`}
+                {m.spareAfterLiving !== null ? `; ${m.spareAfterLiving >= 0 ? 'sobram' : 'faltam'} ${eur(Math.abs(m.spareAfterLiving))} depois das despesas do dia a dia.` : '.'}
+              </span>
+            </div>
+            <div>
+              <span className="muted small">Taxa de esforço BdP</span>
+              <b className={m.dstiStress > RULES.dstiLimit ? 'effort-impossible' : 'effort-ok'}>{pct(m.dsti, 0)}</b>
+              <span className="hint">
+                Só prestação + dívidas. É a que o banco avalia: {pct(m.dstiStress, 0)} com stress test (máx. {RULES.dstiLimit}%).
+              </span>
+            </div>
+          </div>
+        )}
+        <span className="hint">
+          Rendimento líquido mensal (média com subsídios: líquido anual ÷ 12). Desde 1/ago/2026 o BdP limita a taxa de esforço a {RULES.dstiLimit}%, calculada com stress test de +{RULES.stressPpForTerm(i.termYears)} p.p. na taxa variável. <SourceLink id="macroprudencial" />
+        </span>
+      </Section>
+
+      {/* ---------------- DESPESAS DO DIA A DIA ---------------- */}
+      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} loading={pending} owner={owner} />
+
       {/* ---------------- CRÉDITO ---------------- */}
-      <Section icon={<IconBank />} title="Crédito" keywords={SECTION_KEYWORDS.credito} badge={<span className="pill">TAN {pct(m.firstTan)}</span>}>
+      <Section icon={<IconBank />} title="Crédito" keywords={`${SECTION_KEYWORDS.credito} ${SECTION_KEYWORDS.euribor}`} badge={<span className="pill">TAN {pct(m.firstTan)}</span>}>
         <SelectField
           label="Proposta de banco (preenche spread / taxas)"
           value={i.bankPreset}
@@ -328,87 +372,91 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
           max={40}
           hint={`Máximo BdP para ${m.oldest} anos: ${m.maxTermYears} anos. Um prazo longo baixa a prestação e a taxa de esforço; podes encurtá-lo com amortizações.`}
         />
-      </Section>
-
-      {/* ---------------- EURIBOR ---------------- */}
-      {i.rateType !== 'fixa' && (
-        <Section icon={<IconTrend />} title="Euribor — cenário" keywords={SECTION_KEYWORDS.euribor} badge={<span className="pill">{scenario?.label ?? 'Personalizado'}</span>}>
-          <SelectField
-            label="Indexante"
-            value={i.euriborTenor}
-            onChange={(v) => {
-              // Na trajetória personalizada, desloca os valores pela diferença entre indexantes
-              if (i.euriborScenario === 'custom') {
-                const spot = { 3: EURIBOR.m3, 6: EURIBOR.m6, 12: EURIBOR.m12 };
-                patch({ euriborTenor: v, customEuriborPath: translateEuriborPath(i.customEuriborPath, spot[i.euriborTenor], spot[v]) });
-              } else set('euriborTenor', v);
-            }}
-            options={[
-              { value: 3, label: `Euribor 3 meses (hoje ${pct(EURIBOR.m3, 3)})` },
-              { value: 6, label: `Euribor 6 meses (hoje ${pct(EURIBOR.m6, 3)})` },
-              { value: 12, label: `Euribor 12 meses (hoje ${pct(EURIBOR.m12, 3)})` },
-            ]}
-            source="euribor"
-            hint={`Valores de ${EURIBOR.asOf}. A taxa é revista a cada ${i.euriborTenor} meses${i.euriborTenor === 12 ? ' (fica fixa um ano)' : ' (acompanha a Euribor mais de perto)'}.`}
-          />
-          <SelectField
-            label="Evolução da Euribor"
-            value={i.euriborScenario}
-            onChange={(v) => {
-              const s = EURIBOR_SCENARIOS.find((x) => x.id === v);
-              patch({ euriborScenario: v, ...(s ? { customEuriborPath: [...s.paths[i.euriborTenor]] } : {}) });
-            }}
-            options={[...EURIBOR_SCENARIOS.map((s) => ({ value: s.id, label: s.label })), { value: 'custom', label: 'Personalizado (editar abaixo)' }]}
-            hint={scenario?.description}
-            source="euribor-forward"
-          />
-          <div className="field">
-            <span className="field-label">Euribor por ano do contrato (%) — o último valor mantém-se</span>
-            <div className="euribor-grid">
-              {path.map((v, idx) => (
-                <div key={idx} className="euribor-cell">
-                  <span className="hint">
-                    Ano {idx + 1}
-                    {idx === path.length - 1 ? '+' : ''}
-                  </span>
-                  <NumberInput
-                    className="inline-number"
-                    label={`Euribor no ano ${idx + 1}`}
-                    value={v}
-                    step={0.05}
-                    min={-1}
-                    max={15}
-                    suffix="%"
-                    onChange={(n) => {
-                      const next = [...path];
-                      next[idx] = n;
-                      patch({ euriborScenario: 'custom', customEuriborPath: next });
-                    }}
-                  />
-                </div>
-              ))}
+          {/* Euribor (dentro do crédito) */}
+        {i.rateType !== 'fixa' && (
+          <div className="subsection">
+            <div className="sub-title">
+              <IconTrend />
+              Euribor — cenário
+              <span className="pill">{scenario?.label ?? 'Personalizado'}</span>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                type="button"
-                className="btn small"
-                disabled={path.length >= 40}
-                onClick={() => patch({ euriborScenario: 'custom', customEuriborPath: [...path, path[path.length - 1] ?? EURIBOR.m12] })}
-              >
-                + Ano
-              </button>
-              <button
-                type="button"
-                className="btn small"
-                disabled={path.length <= 1}
-                onClick={() => patch({ euriborScenario: 'custom', customEuriborPath: path.slice(0, -1) })}
-              >
-                − Ano
-              </button>
+            <SelectField
+              label="Indexante"
+              value={i.euriborTenor}
+              onChange={(v) => {
+                // Na trajetória personalizada, desloca os valores pela diferença entre indexantes
+                if (i.euriborScenario === 'custom') {
+                  const spot = { 3: EURIBOR.m3, 6: EURIBOR.m6, 12: EURIBOR.m12 };
+                  patch({ euriborTenor: v, customEuriborPath: translateEuriborPath(i.customEuriborPath, spot[i.euriborTenor], spot[v]) });
+                } else set('euriborTenor', v);
+              }}
+              options={[
+                { value: 3, label: `Euribor 3 meses (hoje ${pct(EURIBOR.m3, 3)})` },
+                { value: 6, label: `Euribor 6 meses (hoje ${pct(EURIBOR.m6, 3)})` },
+                { value: 12, label: `Euribor 12 meses (hoje ${pct(EURIBOR.m12, 3)})` },
+              ]}
+              source="euribor"
+              hint={`Valores de ${EURIBOR.asOf}. A taxa é revista a cada ${i.euriborTenor} meses${i.euriborTenor === 12 ? ' (fica fixa um ano)' : ' (acompanha a Euribor mais de perto)'}.`}
+            />
+            <SelectField
+              label="Evolução da Euribor"
+              value={i.euriborScenario}
+              onChange={(v) => {
+                const s = EURIBOR_SCENARIOS.find((x) => x.id === v);
+                patch({ euriborScenario: v, ...(s ? { customEuriborPath: [...s.paths[i.euriborTenor]] } : {}) });
+              }}
+              options={[...EURIBOR_SCENARIOS.map((s) => ({ value: s.id, label: s.label })), { value: 'custom', label: 'Personalizado (editar abaixo)' }]}
+              hint={scenario?.description}
+              source="euribor-forward"
+            />
+            <div className="field">
+              <span className="field-label">Euribor por ano do contrato (%) — o último valor mantém-se</span>
+              <div className="euribor-grid">
+                {path.map((v, idx) => (
+                  <div key={idx} className="euribor-cell">
+                    <span className="hint">
+                      Ano {idx + 1}
+                      {idx === path.length - 1 ? '+' : ''}
+                    </span>
+                    <NumberInput
+                      className="inline-number"
+                      label={`Euribor no ano ${idx + 1}`}
+                      value={v}
+                      step={0.05}
+                      min={-1}
+                      max={15}
+                      suffix="%"
+                      onChange={(n) => {
+                        const next = [...path];
+                        next[idx] = n;
+                        patch({ euriborScenario: 'custom', customEuriborPath: next });
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn small"
+                  disabled={path.length >= 40}
+                  onClick={() => patch({ euriborScenario: 'custom', customEuriborPath: [...path, path[path.length - 1] ?? EURIBOR.m12] })}
+                >
+                  + Ano
+                </button>
+                <button
+                  type="button"
+                  className="btn small"
+                  disabled={path.length <= 1}
+                  onClick={() => patch({ euriborScenario: 'custom', customEuriborPath: path.slice(0, -1) })}
+                >
+                  − Ano
+                </button>
+              </div>
             </div>
           </div>
-        </Section>
-      )}
+        )}
+      </Section>
 
       {/* ---------------- CUSTOS DE AQUISIÇÃO ---------------- */}
       <Section icon={<IconReceipt />} title="Custos de escritura e banco" keywords={SECTION_KEYWORDS.custos} loading={pending} badge={<span className="pill" title="Impostos, escritura e comissões (sem obras nem recheio)">{eur(m.upfrontTotal - i.worksAndFurniture - i.furnishing)}</span>}>
@@ -515,6 +563,11 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
 
         <div className="field">
           <span className="field-label">Amortizações pontuais (ex.: prémios, heranças, venda de investimentos)</span>
+          {m.other.lumpSums.length > 0 && (
+            <span className="hint">
+              Já incluídas de <b>Outros capitais</b>: {m.other.lumpSums.map((l) => `${eur(l.amount)} no mês ${l.month}`).join(', ')}.
+            </span>
+          )}
           {i.lumpSums.map((l) => (
             <div key={l.id} className="lump-row">
               <NumberField label="Mês" value={l.month} onChange={(v) => set('lumpSums', i.lumpSums.map((x) => (x.id === l.id ? { ...x, month: Math.max(1, Math.round(v)) } : x)))} min={1} hint={`Ano ${Math.ceil(l.month / 12)}`} />
@@ -592,45 +645,6 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
           <NumberField label="Comissões mensais" value={i.monthlyBankFee} onChange={(v) => set('monthlyBankFee', v)} suffix="€/mês" step={0.5} min={0} hint="Processamento proibido; conta à ordem pode cobrar" source="comissoes" />
         </div>
       </Section>
-
-      {/* ---------------- RENDIMENTO ---------------- */}
-      <Section
-        icon={<IconPie />}
-        title="Rendimento e taxa de esforço"
-        keywords={SECTION_KEYWORDS.rendimento}
-        loading={pending}
-        badge={i.netMonthlyIncome > 0 ? <span className={`pill ${EFFORT_PILL[m.effortStatus]}`} title="Esforço total: casa + amortizações + outras dívidas">{m.effortTotal.toFixed(0)}% do rendimento</span> : undefined}
-      >
-        <div className="row2">
-          <NumberField label="Rendimento líquido" value={i.netMonthlyIncome} onChange={(v) => set('netMonthlyIncome', v)} suffix="€/mês" step={100} min={0} />
-          <NumberField label="Outras dívidas" value={i.otherDebtMonthly} onChange={(v) => set('otherDebtMonthly', v)} suffix="€/mês" step={25} min={0} />
-        </div>
-        {i.netMonthlyIncome > 0 && (
-          <div className="effort-stats">
-            <div>
-              <span className="muted small">Esforço total</span>
-              <b className={`effort-${m.effortStatus}`}>{pct(m.effortTotal, 0)}</b>
-              <span className="hint">
-                Casa + amortizações + dívidas ÷ rendimento. {m.monthlySpare >= 0 ? `Sobram ${eur(m.monthlySpare)}/mês` : `Faltam ${eur(-m.monthlySpare)}/mês`}
-                {m.spareAfterLiving !== null ? `; ${m.spareAfterLiving >= 0 ? 'sobram' : 'faltam'} ${eur(Math.abs(m.spareAfterLiving))} depois das despesas do dia a dia.` : '.'}
-              </span>
-            </div>
-            <div>
-              <span className="muted small">Taxa de esforço BdP</span>
-              <b className={m.dstiStress > RULES.dstiLimit ? 'effort-impossible' : 'effort-ok'}>{pct(m.dsti, 0)}</b>
-              <span className="hint">
-                Só prestação + dívidas. É a que o banco avalia: {pct(m.dstiStress, 0)} com stress test (máx. {RULES.dstiLimit}%).
-              </span>
-            </div>
-          </div>
-        )}
-        <span className="hint">
-          Rendimento líquido mensal (média com subsídios: líquido anual ÷ 12). Desde 1/ago/2026 o BdP limita a taxa de esforço a {RULES.dstiLimit}%, calculada com stress test de +{RULES.stressPpForTerm(i.termYears)} p.p. na taxa variável. <SourceLink id="macroprudencial" />
-        </span>
-      </Section>
-
-      {/* ---------------- DESPESAS DO DIA A DIA ---------------- */}
-      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} loading={pending} owner={owner} />
       </SearchContext.Provider>
     </aside>
   );

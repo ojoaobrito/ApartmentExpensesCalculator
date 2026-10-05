@@ -410,3 +410,21 @@ body.scrub-edge-right::after { right: 0; background: linear-gradient(270deg, col
 .k-list li.good b { color: var(--good-text); }
 .k-list li.bad b { color: var(--crit); }
 @media (max-width: 560px) { .kpis { grid-template-columns: minmax(0, 1fr); } .kpi.hero { grid-column: auto; } }
+
+/* Outros capitais */
+.month-year { display: flex; gap: 6px; }
+.month-year select, .oc-select { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; padding: 6px 8px; }
+.oc-list { display: flex; flex-direction: column; gap: 8px; }
+.oc-item { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.oc-top { display: flex; align-items: center; gap: 6px; }
+.oc-name { flex: 1; font-weight: 600; font-size: 13px; }
+.oc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.oc-grid > label { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.oc-grid > label > span { font-size: 11px; color: var(--text-2); }
+.oc-grid > label:first-child { grid-column: 1 / -1; }
+.oc-foot { font-size: 12px; color: var(--text-2); }
+/* Sub-bloco dentro de uma secção (p.ex. Euribor dentro do Crédito) */
+.subsection { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; padding-top: 14px; border-top: 1px dashed var(--border); }
+.sub-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 650; color: var(--text); }
+.sub-title svg { color: var(--accent); }
+.sub-title .pill { font-weight: 500; }

@@ -102,6 +102,7 @@ export function Kpis({ m, i }: { m: Model; i: Inputs }) {
             Math.abs(spareCash) >= 1 &&
               (spareCash > 0 ? { label: 'Livre', value: eur(spareCash) } : { label: 'Falta para o fundo', value: `−${eur(-spareCash)}`, tone: 'bad' }),
             m.investmentsLeft > 0 && { label: 'Investimentos (à parte)', value: eur(m.investmentsLeft) },
+            m.other.kept > 0 && { label: 'Capitais futuros', value: eur(m.other.kept) },
           ]}
         />
       </div>

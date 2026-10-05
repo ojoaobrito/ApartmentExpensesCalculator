@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AmortMode, ExtraPlan, LumpSum, RateType } from './lib/loan';
+import type { OtherCapital } from './lib/otherCapital';
 import { DEFAULTS, EURIBOR_SCENARIOS, LISTING } from './data/market';
 import { STAMP_LOAN_PCT } from './lib/taxes';
 import { DEFAULT_LIVING_COSTS, EXAMPLE_LIVING_COSTS, type LivingCost } from './data/livingCosts';
@@ -36,6 +37,10 @@ export interface Inputs {
   emergencyReserve: number;
   downPayment: number; // usada no modo manual
   autoDownPayment: boolean; // entrada = todo o capital disponível
+
+  // Outros capitais (bónus, ações, prémios…) e data prevista da escritura
+  deedDate: string; // AAAA-MM
+  otherCapital: OtherCapital[];
 
   // Compradores
   buyers: Buyer[];
@@ -88,6 +93,14 @@ export interface Inputs {
   capitalGainsTaxPct: number;
 }
 
+/** Bónus de retenção da Motorola: 90 000 € brutos, metade em 2027 e metade em 2028, cada metade 50% dinheiro e 50% ações */
+export const ownerOtherCapital = (): OtherCapital[] => [
+  { id: 'moto-2027-cash', name: 'Bónus Motorola 2027 (dinheiro)', date: '2027-06', gross: 22_500, form: 'dinheiro', taxPct: 50, use: 'amortizar' },
+  { id: 'moto-2027-rsu', name: 'Bónus Motorola 2027 (ações)', date: '2027-06', gross: 22_500, form: 'acoes', taxPct: 45, use: 'guardar' },
+  { id: 'moto-2028-cash', name: 'Bónus Motorola 2028 (dinheiro)', date: '2028-06', gross: 22_500, form: 'dinheiro', taxPct: 50, use: 'amortizar' },
+  { id: 'moto-2028-rsu', name: 'Bónus Motorola 2028 (ações)', date: '2028-06', gross: 22_500, form: 'acoes', taxPct: 45, use: 'guardar' },
+];
+
 export const defaultInputs = (): Inputs => ({
   price: 230_000,
   valuation: DEFAULTS.valuation,
@@ -111,6 +124,9 @@ export const defaultInputs = (): Inputs => ({
   emergencyReserve: 5_000,
   downPayment: 70_000,
   autoDownPayment: true,
+
+  deedDate: '2026-12',
+  otherCapital: ownerOtherCapital(),
 
   buyers: [{ id: 'b1', age: 28, sharePct: 100, youngEligible: true }],
 
@@ -173,6 +189,7 @@ export const guestInputs = (): Inputs => ({
   investmentsUsed: 0,
   emergencyReserve: 3_000,
   downPayment: 20_000,
+  otherCapital: [],
 
   buyers: [{ id: 'b1', age: 30, sharePct: 100, youngEligible: true }],
 
@@ -239,7 +256,7 @@ function migrate(p: Partial<Inputs>): Partial<Inputs> {
 }
 
 /** Completa inputs gravados com versões antigas com os valores por defeito atuais */
-export const withDefaults = (p: Partial<Inputs>, kind: ProfileKind = 'owner'): Inputs => ({ ...defaultsFor(kind), ...p });
+export const withDefaults = (p: Partial<Inputs>, kind: ProfileKind = 'owner'): Inputs => ({ ...defaultsFor(kind), otherCapital: [], ...p });
 
 /**
  * Inputs da simulação, gravados neste browser. Num browser novo, começa com os
@@ -248,6 +265,8 @@ export const withDefaults = (p: Partial<Inputs>, kind: ProfileKind = 'owner'): I
  */
 export function useInputs(kind: ProfileKind | null) {
   const [fresh, setFresh] = useState(() => load<Partial<Inputs> | null>(KEY, null) === null);
+  // Inputs gravados antes de existir "Outros capitais": o dono recebe o bónus por defeito
+  const [fillOther, setFillOther] = useState(() => load<Partial<Inputs> | null>(KEY, null)?.otherCapital === undefined);
   const [inputs, setInputs] = useState<Inputs>(() => {
     const stored = load<Partial<Inputs> | null>(KEY, null);
     return stored ? withDefaults(migrate(stored)) : guestInputs();
@@ -255,7 +274,11 @@ export function useInputs(kind: ProfileKind | null) {
   // Primeira visita: aplica os valores iniciais certos assim que se sabe quem é
   if (fresh && kind) {
     setFresh(false);
+    setFillOther(false);
     setInputs(defaultsFor(kind));
+  } else if (fillOther && kind) {
+    setFillOther(false);
+    if (kind === 'owner') setInputs((s) => ({ ...s, otherCapital: ownerOtherCapital() }));
   }
   // Só grava depois de escolhidos os valores iniciais (senão um recarregamento rápido ficava com os de exemplo)
   useEffect(() => {
