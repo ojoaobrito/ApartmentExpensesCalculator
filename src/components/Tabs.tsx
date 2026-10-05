@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Skeleton } from './Skeleton';
-import { Pencil, RefreshCw, Wallet, X } from 'lucide-react';
+import { ArrowRight, Pencil, RefreshCw, Wallet, X } from 'lucide-react';
 import { heroColors } from '../lib/effortColor';
 import { withDefaults, type Inputs } from '../state';
 import { exportScenarios, parseScenarioFile, type SavedScenario, type ScenarioExtras, type useScenarios } from '../storage';
@@ -307,11 +307,24 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
         : m.effortStatus !== 'none'
           ? [money('por mês', m.monthlySpare)]
           : [];
-  const figures: { label: string; value: string; bad?: boolean }[] = [
+  const figures: { label: string; value: ReactNode; bad?: boolean; title?: string }[] = [
     { label: 'Por mês', value: eurC(m.monthlyTotal + m.extraMonthlyEquivalent) },
     { label: 'Escritura', value: eur(m.cashNeeded) },
-    { label: 'Contrato', value: `${s.inputs.termYears} anos` },
-    { label: 'Liquidado em', value: duration(w.payoffMonth) },
+    { label: 'Prestação', value: eurC(w.firstPayment), title: 'Prestação do 1.º mês (capital + juros)' },
+    {
+      label: 'Crédito',
+      title: `Contrato de ${s.inputs.termYears} anos, liquidado em ${duration(w.payoffMonth)}`,
+      value:
+        w.payoffMonth < s.inputs.termYears * 12 ? (
+          <span className="sc-term">
+            <span className="sc-term-from">{s.inputs.termYears} anos</span>
+            <ArrowRight size={13} strokeWidth={2.4} aria-label="liquidado em" />
+            {duration(w.payoffMonth)}
+          </span>
+        ) : (
+          `${s.inputs.termYears} anos`
+        ),
+    },
     { label: 'Juros', value: eur(w.totalInterest) },
     ...spares,
   ];
@@ -352,7 +365,7 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
       </div>
       <div className="sc-figures">
         {figures.map((f) => (
-          <div key={f.label}>
+          <div key={f.label} title={f.title}>
             <span>{f.label}</span>
             <b className={f.bad ? 'bad' : undefined}>{f.value}</b>
           </div>

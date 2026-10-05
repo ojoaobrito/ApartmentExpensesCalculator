@@ -296,7 +296,7 @@ table.data td.muted { color: var(--text-3); }
 .sc-tag { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-2); }
 .sc-figures { grid-area: figures; display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 8px; }
 .sc-figures > div { display: flex; flex-direction: column; gap: 1px; }
-.sc-figures span { font-size: 11px; color: var(--text-3); }
+.sc-figures > div > span { font-size: 11px; color: var(--text-3); }
 .sc-figures b { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .sc-figures b.bad { color: var(--crit); }
 .sc-actions { grid-area: actions; display: flex; align-items: center; gap: 6px; }
@@ -445,3 +445,6 @@ body.sorting, body.sorting * { cursor: grabbing !important; user-select: none !i
 .hero-row.aside b { color: var(--text-2); font-weight: 600; }
 .hero-note { margin-top: 10px; font-size: 12px; line-height: 1.45; color: var(--text-2); }
 .hero-note b { color: var(--text); }
+.sc-term { display: inline-flex; align-items: center; gap: 5px; }
+.sc-term svg { color: var(--text-3); }
+.sc-term-from { color: var(--text-3); font-weight: 500; }
