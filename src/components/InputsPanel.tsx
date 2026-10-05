@@ -220,6 +220,18 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
           />
           <div className="row2">
             <NumberField
+              label="Mais-valias geradas"
+              value={Math.round(i.investments * i.investmentsGainPct) / 100}
+              onChange={(v) => set('investmentsGainPct', i.investments > 0 ? Math.min(100, Math.max(0, (v / i.investments) * 100)) : 0)}
+              suffix="€"
+              step={500}
+              min={0}
+              max={i.investments}
+              disabled={synced || i.investments === 0}
+              loading={pending}
+              hint={synced ? 'Da app de Finanças' : 'O ganho dentro dos investimentos'}
+            />
+            <NumberField
               label="Imposto sobre mais-valias"
               value={i.capitalGainsTaxPct}
               onChange={(v) => set('capitalGainsTaxPct', v)}
@@ -229,22 +241,8 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
               max={100}
               disabled={synced}
               loading={pending}
-              hint="Só sobre o ganho, não sobre o valor vendido"
+              hint="Aplica-se só às mais-valias"
             />
-            {/* Sem a app de Finanças, é preciso dizer quanto dos investimentos é ganho */}
-            {!synced && i.investments > 0 && (
-              <NumberField
-                label="Desse valor, é ganho"
-                value={Math.round(i.investments * i.investmentsGainPct) / 100}
-                onChange={(v) => set('investmentsGainPct', i.investments > 0 ? Math.min(100, Math.max(0, (v / i.investments) * 100)) : 0)}
-                suffix="€"
-                step={500}
-                min={0}
-                max={i.investments}
-                loading={pending}
-                hint="Mais-valias por realizar"
-              />
-            )}
           </div>
           <div className="row2">
             <NumberField label="Fundo de emergência" value={i.emergencyReserve} onChange={(v) => set('emergencyReserve', v)} suffix="€" step={1000} min={0} />
