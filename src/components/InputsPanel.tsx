@@ -309,7 +309,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
         <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} loading={pending} owner={owner} />
     ),
     credito: (
-        <Section icon={<IconBank />} title="Crédito" keywords={`${SECTION_KEYWORDS.credito} ${SECTION_KEYWORDS.euribor}`} badge={<span className="pill">TAN {pct(m.firstTan)}</span>}>
+        <Section icon={<IconBank />} title="Crédito" keywords={`${SECTION_KEYWORDS.credito} ${SECTION_KEYWORDS.euribor}`} badge={<span className="pill">TAN {pct(m.firstTan)} · {i.termYears} anos</span>}>
           <SelectField
             label="Proposta de banco (preenche spread / taxas)"
             value={i.bankPreset}
