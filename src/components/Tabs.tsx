@@ -297,14 +297,23 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
   const w = m.withExtras;
   const c = heroColors(m.effortStatus === 'none' ? null : m.effortTotal);
   const crit = m.alerts.filter((a) => a.kind === 'crit').length;
-  const spare = m.spareAfterAll ?? m.spareAfterLiving ?? (m.effortStatus === 'none' ? null : m.monthlySpare);
-  const figures = [
+  // Sobra (ou falta) no fim do mês: com despesas e investimentos, mostra antes e depois de investir
+  const money = (label: string, v: number) => ({ label: `${v < 0 ? 'Falta' : 'Sobra'} ${label}`.trim(), value: v < 0 ? `−${eur(-v)}` : eur(v), bad: v < 0 });
+  const spares =
+    m.spareAfterLiving !== null && m.living && m.living.investMonthly > 0 && m.spareAfterAll !== null
+      ? [money('antes de investir', m.spareAfterLiving), money('depois de investir', m.spareAfterAll)]
+      : m.spareAfterLiving !== null
+        ? [money('por mês', m.spareAfterLiving)]
+        : m.effortStatus !== 'none'
+          ? [money('por mês', m.monthlySpare)]
+          : [];
+  const figures: { label: string; value: string; bad?: boolean }[] = [
     { label: 'Por mês', value: eurC(m.monthlyTotal + m.extraMonthlyEquivalent) },
     { label: 'Escritura', value: eur(m.cashNeeded) },
     { label: 'Liquidado em', value: duration(w.payoffMonth) },
     { label: 'Juros', value: eur(w.totalInterest) },
-    spare !== null && { label: spare < 0 ? 'Falta por mês' : 'Sobra por mês', value: spare < 0 ? `−${eur(-spare)}` : eur(spare), bad: spare < 0 },
-  ].filter((f): f is { label: string; value: string; bad?: boolean } => !!f);
+    ...spares,
+  ];
   return (
     <div className="scenario-item" style={{ ['--tone' as string]: c.solid, ['--tone-ink' as string]: c.ink }}>
       <div className="sc-main">
