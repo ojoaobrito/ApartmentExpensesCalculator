@@ -116,7 +116,7 @@ describe('despesas do dia a dia', () => {
 
   it('desligada não mexe na simulação; quando o salário não chega fica impossível', () => {
     const i = defaultInputs();
-    expect(compute(i).living).toBeNull();
+    expect(compute({ ...i, livingCostsEnabled: false }).living).toBeNull();
     const m = compute({ ...i, livingCostsEnabled: true, netMonthlyIncome: 2_000 });
     expect(m.spareAfterLiving!).toBeLessThan(0);
     expect(m.effortStatus).toBe('impossible');

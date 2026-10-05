@@ -146,7 +146,7 @@ export const defaultInputs = (): Inputs => ({
   netMonthlyIncome: 3_300,
   otherDebtMonthly: 0,
 
-  livingCostsEnabled: false,
+  livingCostsEnabled: true,
   livingCosts: DEFAULT_LIVING_COSTS.map((c) => ({ ...c })),
   useFinanceData: true,
 
@@ -213,10 +213,28 @@ function save(key: string, value: unknown) {
  * Atualiza valores gravados que ainda estão nos valores por defeito antigos
  * (para quem nunca os mudou passar a ver os novos).
  */
+/** Marca uma migração como feita; devolve true se já tinha sido feita antes */
+function once(id: string) {
+  const k = `casa-sim:migrated:${id}`;
+  try {
+    if (localStorage.getItem(k)) return true;
+    localStorage.setItem(k, '1');
+  } catch {
+    /* sem armazenamento: aplica sempre (não há nada gravado de qualquer forma) */
+  }
+  return false;
+}
+
+// Avaliado uma vez ao carregar a app (o React pode chamar o estado inicial duas vezes)
+const LIVING_ON_DONE = once('living-on');
+
 function migrate(p: Partial<Inputs>): Partial<Inputs> {
   const out = { ...p };
   if (out.emergencyReserve === 15_000) out.emergencyReserve = 5_000;
   if (out.netMonthlyIncome === 3_000) out.netMonthlyIncome = 3_300;
+  // Despesas do dia a dia passaram a vir ligadas para o dono (uma vez só; quem
+  // usa a app de Finanças é o dono, os convidados começam sem ela)
+  if (!LIVING_ON_DONE && out.useFinanceData) out.livingCostsEnabled = true;
   return out;
 }
 
