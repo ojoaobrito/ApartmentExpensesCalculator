@@ -310,6 +310,7 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
   const figures: { label: string; value: string; bad?: boolean }[] = [
     { label: 'Por mês', value: eurC(m.monthlyTotal + m.extraMonthlyEquivalent) },
     { label: 'Escritura', value: eur(m.cashNeeded) },
+    { label: 'Contrato', value: `${s.inputs.termYears} anos` },
     { label: 'Liquidado em', value: duration(w.payoffMonth) },
     { label: 'Juros', value: eur(w.totalInterest) },
     ...spares,
@@ -334,14 +335,6 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
             </span>
           )}
         </div>
-        <div className="sc-figures">
-          {figures.map((f) => (
-            <div key={f.label}>
-              <span>{f.label}</span>
-              <b className={f.bad ? 'bad' : undefined}>{f.value}</b>
-            </div>
-          ))}
-        </div>
       </div>
       <div className="sc-actions">
         <button className="btn small" onClick={onLoad} title="Repõe tudo como estava ao gravar (valores, anúncio, despesas e secções abertas)">
@@ -356,6 +349,14 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
         <button className="btn small sc-icon danger" onClick={onRemove} title="Apagar" aria-label={`Apagar ${s.name}`}>
           <X size={15} strokeWidth={2.2} />
         </button>
+      </div>
+      <div className="sc-figures">
+        {figures.map((f) => (
+          <div key={f.label}>
+            <span>{f.label}</span>
+            <b className={f.bad ? 'bad' : undefined}>{f.value}</b>
+          </div>
+        ))}
       </div>
     </div>
   );
