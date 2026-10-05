@@ -17,8 +17,6 @@ export interface FinanceSummary {
   recurring: { id: string; name: string; category: string; amount: number; frequency: 'mensal' | 'anual'; month: number | null; investment: boolean }[];
 }
 
-export const FINANCE_APP_URL = 'https://finance-hub-71f.pages.dev';
-
 export type FinanceSync =
   | { status: 'loading'; data: null }
   | { status: 'ready'; data: FinanceSummary }

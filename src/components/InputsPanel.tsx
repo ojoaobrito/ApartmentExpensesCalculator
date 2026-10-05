@@ -11,7 +11,7 @@ import { LivingCostsSection } from './LivingCostsSection';
 import { OtherCapitalSection } from './OtherCapitalSection';
 import { SortableList } from './sortable';
 import { useSectionOrder } from '../sectionOrder';
-import { FINANCE_APP_URL, type FinanceSync } from '../financeSync';
+import type { FinanceSync } from '../financeSync';
 import { animateDetails } from './motion';
 import { IconArrowDownCircle, IconBank, IconHome, IconPie, IconReceipt, IconSearch, IconTrend, IconUmbrella, IconWallet } from './icons';
 import { translateEuriborPath } from '../lib/loan';
@@ -54,7 +54,7 @@ const SECTION_LABELS: Record<string, string> = {
 
 const SECTION_KEYWORDS = {
   outros: 'outros capitais bónus bonus prémio retenção motorola ações rsu herança escritura prevista data entradas futuras',
-  despesas: 'despesas do dia a dia orçamento salário gastos mensais anuais compras supermercado luz gás água internet ginásio carro combustível seguro iuc software subscrições investimentos etf poupança folha google sheet',
+  despesas: 'despesas do dia a dia orçamento salário gastos mensais anuais compras supermercado luz gás água internet ginásio carro combustível seguro iuc software subscrições investimentos etf poupança',
   imovel: 'imóvel preço avaliação bancária área m2 metro quadrado anúncio idealista vpt valor patrimonial condomínio imi isenção obras cedência posição contratual prémio cedente',
   capitais: 'capitais próprios e entrada recheio e obras decoração recheio móveis mobília mobiliário eletrodomésticos disponível poupança liquidez investimentos resgatar mais-valia imposto fundo de emergência entrada ltv capital próprio dinheiro',
   custos: 'custos de escritura e banco escritura registos casa pronta solicitador advogado avaliação comissões dossier formalização imposto do selo crédito custos iniciais',
@@ -830,10 +830,7 @@ function FinanceLink({ finance, synced, on, setOn }: { finance: FinanceSync; syn
         <b>Usar os valores da app de Finanças</b>
       </Check>
       <span className="small muted">
-        {eur(d.liquid)} líquidos · {eur(d.invested)} investidos · {d.recurring.length} despesas recorrentes ·{' '}
-        <a href={FINANCE_APP_URL} target="_blank" rel="noreferrer">
-          abrir <ExternalLink size={12} strokeWidth={2} />
-        </a>
+        {eur(d.liquid)} líquidos · {eur(d.invested)} investidos · {d.recurring.length} despesas recorrentes
       </span>
     </div>
   );

@@ -17,11 +17,7 @@ export interface LivingCost {
   enabled: boolean;
 }
 
-export const LIVING_COSTS_SOURCE = {
-  name: 'Folha "Finanças"',
-  url: 'https://docs.google.com/spreadsheets/d/1_QzdNn6QX8bJD1hOf5tdpU0XlN1VPoSjs74oMU_Bvew/edit',
-  importedAt: '4/out/2026',
-};
+export const LIVING_COSTS_IMPORTED_AT = '4/out/2026';
 
 const m = (id: string, name: string, category: string, amount: number, investment = false): LivingCost => ({
   id,

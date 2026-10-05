@@ -1,11 +1,10 @@
 import type { Inputs } from '../state';
 import { X } from 'lucide-react';
 import type { Model } from '../model';
-import { DEFAULT_LIVING_COSTS, EXAMPLE_LIVING_COSTS, LIVING_COSTS_SOURCE, MONTHS_PT, type LivingCost } from '../data/livingCosts';
+import { DEFAULT_LIVING_COSTS, EXAMPLE_LIVING_COSTS, LIVING_COSTS_IMPORTED_AT, MONTHS_PT, type LivingCost } from '../data/livingCosts';
 import { eur } from '../lib/format';
 import { Check, InlineNumber, Section } from './ui';
 import { IconCart } from './icons';
-import { FINANCE_APP_URL } from '../financeSync';
 import { Skeleton } from './Skeleton';
 
 interface Props {
@@ -51,23 +50,11 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced,
         <b>Incluir na simulação</b>: mostra quanto sobra mesmo do salário depois da casa e de tudo o resto
       </Check>
       {synced ? (
-        <span className="hint">
-          Vêm da{' '}
-          <a href={`${FINANCE_APP_URL}/#despesas`} target="_blank" rel="noreferrer">
-            app de Finanças
-          </a>{' '}
-          (sem as que acabam com a compra, como a renda). Edita lá; aqui atualiza sozinho. Os valores anuais contam como 1/12 por mês.
-        </span>
+        <span className="hint">Vêm da app de Finanças (sem as que acabam com a compra, como a renda) e atualizam sozinhas. Os valores anuais contam como 1/12 por mês.</span>
       ) : !owner ? (
         <span className="hint">Lista de exemplo com valores típicos: ajusta, desliga ou acrescenta as tuas despesas. Os valores anuais contam como 1/12 por mês.</span>
       ) : (
-        <span className="hint">
-          Importado da{' '}
-          <a href={LIVING_COSTS_SOURCE.url} target="_blank" rel="noreferrer">
-            {LIVING_COSTS_SOURCE.name}
-          </a>{' '}
-          a {LIVING_COSTS_SOURCE.importedAt} (sem a renda). Os valores anuais contam como 1/12 por mês.
-        </span>
+        <span className="hint">Lista importada a {LIVING_COSTS_IMPORTED_AT} (sem a renda). Os valores anuais contam como 1/12 por mês.</span>
       )}
 
       {i.livingCostsEnabled && loading && (
@@ -153,11 +140,11 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced,
               type="button"
               className="btn small"
               onClick={() => {
-                if (confirm(`Repor as despesas com ${owner ? 'os valores importados da folha' : 'a lista de exemplo'}? As tuas alterações nesta lista perdem-se.`))
+                if (confirm(`Repor as despesas com ${owner ? 'a lista importada' : 'a lista de exemplo'}? As tuas alterações nesta lista perdem-se.`))
                   set('livingCosts', (owner ? DEFAULT_LIVING_COSTS : EXAMPLE_LIVING_COSTS).map((c) => ({ ...c })));
               }}
             >
-              {owner ? 'Repor valores da folha' : 'Repor lista de exemplo'}
+              {owner ? 'Repor lista importada' : 'Repor lista de exemplo'}
             </button>
           </div>}
         </>
