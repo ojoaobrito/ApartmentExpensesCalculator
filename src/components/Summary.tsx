@@ -2,7 +2,14 @@ import type React from 'react';
 import type { Inputs } from '../state';
 import { EFFORT_LABEL, type Model } from '../model';
 import { heroColors, METER_MAX, meterGradient } from '../lib/effortColor';
-import { MONTHS_PT_LONG } from '../data/livingCosts';
+import { MONTHS_PT, MONTHS_PT_LONG } from '../data/livingCosts';
+import { dateAfterDeed } from '../lib/otherCapital';
+import { Gift } from 'lucide-react';
+
+const monthLabel = (d: string) => {
+  const [y, mo] = d.split('-').map(Number);
+  return `${MONTHS_PT[mo - 1]} ${y}`;
+};
 
 /** Gradiente do cartão principal conforme o esforço (variáveis CSS) */
 function heroStyle(m: Model) {
@@ -29,8 +36,10 @@ function KList({ rows }: { rows: (KRow | false)[] }) {
   );
 }
 
-export function Kpis({ m, i }: { m: Model; i: Inputs }) {
+export function Kpis({ m, i, noOther }: { m: Model; i: Inputs; noOther?: Model | null }) {
   const w = m.withExtras;
+  // Quanto mais por mês sairia do salário sem os outros capitais (bónus)
+  const bonusRelief = noOther && m.other.lumpSums.length ? noOther.monthlyTotal + noOther.extraMonthlyEquivalent - (m.monthlyTotal + m.extraMonthlyEquivalent) : null;
   const up = (...keys: string[]) => m.upfront.filter((c) => keys.includes(c.key)).reduce((t, c) => t + c.value, 0);
   const spareCash = m.cashLeft - i.emergencyReserve;
   const earlyMonths = i.termYears * 12 - w.payoffMonth;
@@ -72,11 +81,29 @@ export function Kpis({ m, i }: { m: Model; i: Inputs }) {
             ))}
           {m.extraMonthlyEquivalent > 0 && (
             <div className="hero-row">
-              <span>Amortizações (média{m.params.extraPlan.enabled && m.params.extraPlan.amount > 0 ? ` de ${eur(m.params.extraPlan.amount)}${{ 1: '/mês', 3: '/trim.', 6: '/sem.', 12: '/ano' }[m.params.extraPlan.everyMonths] ?? ''}` : ''})</span>
+              <span>
+                Amortizações do salário
+                {m.params.extraPlan.enabled && m.params.extraPlan.amount > 0 && m.params.extraPlan.everyMonths > 1
+                  ? ` (${eur(m.params.extraPlan.amount)}${{ 3: '/trim.', 6: '/sem.', 12: '/ano' }[m.params.extraPlan.everyMonths] ?? ''})`
+                  : ''}
+              </span>
               <b>{eurC(m.extraMonthlyEquivalent)}</b>
             </div>
           )}
+          {m.other.lumpSums.map((l) => (
+            <div key={l.id} className="hero-row aside">
+              <span>
+                <Gift size={12} strokeWidth={2.2} aria-hidden /> Bónus · {monthLabel(dateAfterDeed(i.deedDate, l.month))}
+              </span>
+              <b>{eur(l.amount)}</b>
+            </div>
+          ))}
         </div>
+        {bonusRelief !== null && Math.abs(bonusRelief) >= 1 && (
+          <div className="hero-note">
+            Os bónus amortizam à parte, quando chegam, e não entram no valor por mês. {bonusRelief > 0 ? <>Sem eles, para o mesmo objetivo, seriam <b>{eurC(m.monthlyTotal + m.extraMonthlyEquivalent + bonusRelief)}</b>/mês (+{eur(bonusRelief)}).</> : null}
+          </div>
+        )}
       </div>
       <div className="kpi">
         <div className="k-label">Dinheiro na escritura</div>

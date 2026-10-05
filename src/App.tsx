@@ -39,6 +39,8 @@ export default function App() {
   const pending = awaitingProfile || (owner && inputs.useFinanceData && finance.status === 'loading');
   const effective = useMemo(() => (synced && finance.data ? applyFinance(inputs, finance.data) : inputs), [synced, finance, inputs]);
   const model = useMemo(() => compute(effective), [effective]);
+  // A mesma simulação sem os outros capitais (para mostrar quanto o bónus alivia por mês)
+  const modelNoOther = useMemo(() => (effective.otherCapital.length ? compute({ ...effective, otherCapital: [] }) : null), [effective]);
   const [tab, setTabState] = useState<Tab>('resumo');
   const [tabDir, setTabDir] = useState<'left' | 'right'>('right');
   // Muda de separador guardando a direção (para a animação de entrada)
@@ -170,7 +172,7 @@ export default function App() {
             </>
           ) : (
             <div className="skel-done results-top">
-              <Kpis m={model} i={effective} />
+              <Kpis m={model} i={effective} noOther={modelNoOther} />
               <Alerts m={model} />
             </div>
           )}

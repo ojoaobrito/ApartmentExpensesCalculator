@@ -53,3 +53,10 @@ export function summarizeOtherCapital(items: OtherCapital[], deedDate: string): 
   }
   return out;
 }
+
+/** Data (AAAA-MM) n meses depois da escritura */
+export function dateAfterDeed(deedDate: string, months: number): string {
+  const [y, m] = deedDate.split('-').map(Number);
+  const t = y * 12 + (m - 1) + months;
+  return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+}
