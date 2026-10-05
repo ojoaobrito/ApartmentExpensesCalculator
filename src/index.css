@@ -448,3 +448,4 @@ body.sorting, body.sorting * { cursor: grabbing !important; user-select: none !i
 .sc-term { display: inline-flex; align-items: center; gap: 5px; }
 .sc-term svg { color: var(--text-3); }
 .sc-term-from { color: var(--text-3); font-weight: 500; }
+.sc-loan { color: var(--text-2); font-weight: 650; }

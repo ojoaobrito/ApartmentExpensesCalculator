@@ -340,8 +340,16 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
           {crit > 0 && <span className="pill crit">{crit === 1 ? '1 alerta crítico' : `${crit} alertas críticos`}</span>}
         </div>
         <div className="sc-meta">
-          {new Date(s.savedAt).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}
-          {s.inputs.price > 0 && <> · casa de {eur(s.inputs.price)}</>}
+          <span>
+            {new Date(s.savedAt).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}
+            {s.inputs.price > 0 && <> · casa de {eur(s.inputs.price)}</>}
+            {m.principal > 0 && (
+              <>
+                {' '}
+                · crédito de <b className="sc-loan">{eur(m.principal)}</b> (LTV {m.ltv.toFixed(0)}%)
+              </>
+            )}
+          </span>
           {s.extras?.finance && (
             <span className="sc-tag" title={`Valores da app de Finanças de ${new Date(s.extras.finance.updatedAt).toLocaleDateString('pt-PT')}`}>
               <Wallet size={11} strokeWidth={2.2} aria-hidden /> valores da app de Finanças
