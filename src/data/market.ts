@@ -170,7 +170,7 @@ export const IMI_PRESETS = [
 ];
 
 export const DEFAULTS = {
-  furnishing: 7_500, // estimativa para mobilar um T1 que já traz cozinha equipada e A/C
+  furnishing: 10_000, // recheio e pequenas obras de um T1 que já traz cozinha equipada e A/C
   valuation: 200_000, // estimativa: comparáveis novos com piscina a 195–200 k€; substituir pela avaliação real
   vpt: 65_000, // estimativa pela fórmula do CIMI (54–81 k€)
   imiRatePct: 0.3,

@@ -95,7 +95,7 @@ function cashFigures(inp: Inputs) {
     { key: 'dossier', label: 'Dossier e formalização (c/ IS 4%)', value: setupCost },
     { key: 'solicitador', label: 'Solicitador / advogado', value: inp.solicitorFee },
     { key: 'obras', label: 'Obras', value: inp.worksAndFurniture },
-    { key: 'recheio', label: 'Decoração inicial e recheio', value: inp.furnishing },
+    { key: 'recheio', label: 'Recheio e obras', value: inp.furnishing },
   ].filter((c) => c.value > 0 || ['imt', 'isCompra'].includes(c.key));
   const upfrontTotal = upfront.reduce((a, c) => a + c.value, 0);
   const youngSavings =

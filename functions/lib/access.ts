@@ -7,7 +7,7 @@
 
 export interface AccessEnv {
   ACCESS_TEAM_DOMAIN?: string; // ex.: https://minha-equipa.cloudflareaccess.com
-  ACCESS_AUD?: string; // "Application Audience (AUD) Tag"
+  ACCESS_AUD?: string; // "Application Audience (AUD) Tag" (uma ou várias, separadas por vírgulas)
   DEV_BYPASS_AUTH?: string; // só em desenvolvimento local (.dev.vars)
 }
 
@@ -61,7 +61,9 @@ export async function verifyAccess(request: Request, env: AccessEnv): Promise<Ac
     const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64urlToBytes(parts[2]), new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
     if (!valid) return { ok: false, status: 401, error: 'bad_signature' };
     const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-    if (!aud.includes(env.ACCESS_AUD)) return { ok: false, status: 401, error: 'bad_audience' };
+    // ACCESS_AUD pode ter várias (separadas por vírgulas), p.ex. ao mudar de aplicação no Access
+    const allowedAud = env.ACCESS_AUD.split(',').map((x) => x.trim()).filter(Boolean);
+    if (!aud.some((a) => allowedAud.includes(a))) return { ok: false, status: 401, error: 'bad_audience' };
     if (payload.exp * 1000 < Date.now()) return { ok: false, status: 401, error: 'expired' };
     if (payload.iss.replace(/\/$/, '') !== env.ACCESS_TEAM_DOMAIN.replace(/\/$/, '')) return { ok: false, status: 401, error: 'bad_issuer' };
     // Pessoas têm email; tokens de serviço (outras apps) têm common_name

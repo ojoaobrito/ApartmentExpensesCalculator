@@ -27,7 +27,7 @@ export interface Inputs {
   assignmentPremium: number; // valor pago ao cedente (prémio)
   condoMonthly: number;
   worksAndFurniture: number; // obras
-  furnishing: number; // decoração inicial e recheio
+  furnishing: number; // recheio e obras
 
   // Capitais próprios
   cash: number;
@@ -244,6 +244,7 @@ function once(id: string) {
 
 // Avaliado uma vez ao carregar a app (o React pode chamar o estado inicial duas vezes)
 const LIVING_ON_DONE = once('living-on');
+const FURNISHING_10K_DONE = once('furnishing-10k');
 
 function migrate(p: Partial<Inputs>): Partial<Inputs> {
   const out = { ...p };
@@ -252,6 +253,8 @@ function migrate(p: Partial<Inputs>): Partial<Inputs> {
   // Despesas do dia a dia passaram a vir ligadas para o dono (uma vez só; quem
   // usa a app de Finanças é o dono, os convidados começam sem ela)
   if (!LIVING_ON_DONE && out.useFinanceData) out.livingCostsEnabled = true;
+  // Recheio e obras do dono passou a 10 000 € (uma vez só)
+  if (!FURNISHING_10K_DONE && out.useFinanceData) out.furnishing = 10_000;
   return out;
 }
 

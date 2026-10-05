@@ -33,7 +33,7 @@ describe('cedência de posição contratual', () => {
   });
 });
 
-describe('decoração e recheio', () => {
+describe('recheio e obras', () => {
   it('com entrada manual, sai da liquidez e do capital disponível para a entrada', () => {
     const i = { ...defaultInputs(), autoDownPayment: false };
     const sem = compute({ ...i, furnishing: 0 });

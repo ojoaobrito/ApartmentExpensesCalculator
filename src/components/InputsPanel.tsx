@@ -56,7 +56,7 @@ const SECTION_KEYWORDS = {
   outros: 'outros capitais bónus bonus prémio retenção motorola ações rsu herança escritura prevista data entradas futuras',
   despesas: 'despesas do dia a dia orçamento salário gastos mensais anuais compras supermercado luz gás água internet ginásio carro combustível seguro iuc software subscrições investimentos etf poupança folha google sheet',
   imovel: 'imóvel preço avaliação bancária área m2 metro quadrado anúncio idealista vpt valor patrimonial condomínio imi isenção obras cedência posição contratual prémio cedente',
-  capitais: 'capitais próprios e entrada decoração recheio móveis mobília mobiliário eletrodomésticos disponível poupança liquidez investimentos resgatar mais-valia imposto fundo de emergência entrada ltv capital próprio dinheiro',
+  capitais: 'capitais próprios e entrada recheio e obras decoração recheio móveis mobília mobiliário eletrodomésticos disponível poupança liquidez investimentos resgatar mais-valia imposto fundo de emergência entrada ltv capital próprio dinheiro',
   custos: 'custos de escritura e banco escritura registos casa pronta solicitador advogado avaliação comissões dossier formalização imposto do selo crédito custos iniciais',
   credito: 'crédito banco proposta cgd bcp millennium santander novobanco bpi bankinter activobank ctt crédito agrícola montepio abanca spread taxa variável mista fixa tan prazo anos contrato',
   euribor: 'euribor — cenário euribor indexante 3 6 12 meses cenário forward mercado subida descida stress trajetória bce juros',
@@ -213,18 +213,43 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
             hint={m.investmentsTax > 0 ? `Imposto estimado sobre mais-valias ao resgatar: ${eur(m.investmentsTax)}` : undefined}
           />
           <div className="row2">
-            <NumberField label="Mais-valia latente" value={i.investmentsGainPct} onChange={(v) => set('investmentsGainPct', v)} suffix="% do valor" step={1} min={0} max={100} disabled={i.investmentsUsed === 0 || synced} loading={pending} hint={synced ? 'Calculado a partir das mais-valias tributáveis' : i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : `Imposto de ${pct(i.capitalGainsTaxPct, 0)} sobre o ganho`} />
-            <NumberField label="Fundo de emergência" value={i.emergencyReserve} onChange={(v) => set('emergencyReserve', v)} suffix="€" step={1000} min={0} />
+            <NumberField
+              label="Parte do valor que é ganho"
+              value={i.investmentsGainPct}
+              onChange={(v) => set('investmentsGainPct', v)}
+              suffix="%"
+              step={1}
+              min={0}
+              max={100}
+              disabled={i.investmentsUsed === 0 || synced}
+              loading={pending}
+              hint={synced ? 'Da app de Finanças: mais-valias ÷ valor investido. Não é a taxa de imposto.' : i.investmentsUsed === 0 ? 'Só conta se resgatares investimentos' : 'Mais-valias ÷ valor investido. Só o ganho paga imposto.'}
+            />
+            <NumberField
+              label="Imposto sobre mais-valias"
+              value={i.capitalGainsTaxPct}
+              onChange={(v) => set('capitalGainsTaxPct', v)}
+              suffix="%"
+              step={1}
+              min={0}
+              max={100}
+              disabled={synced}
+              loading={pending}
+              hint={synced ? 'Da app de Finanças' : 'Taxa liberatória: 28%'}
+            />
           </div>
-          <NumberField
-            label="Decoração inicial e recheio"
-            value={i.furnishing}
-            onChange={(v) => set('furnishing', v)}
-            suffix="€"
-            step={500}
-            min={0}
-            hint="Móveis, eletrodomésticos em falta, cortinados, iluminação… Sai da poupança antes da entrada."
-          />
+          <div className="row2">
+            <NumberField label="Fundo de emergência" value={i.emergencyReserve} onChange={(v) => set('emergencyReserve', v)} suffix="€" step={1000} min={0} />
+            <NumberField
+              label="Recheio e obras"
+              value={i.furnishing}
+              onChange={(v) => set('furnishing', v)}
+              suffix="€"
+              step={500}
+              min={0}
+              hint="Móveis, eletrodomésticos, pequenas obras… Sai da poupança antes da entrada."
+            />
+          </div>
           {pending ? <Skeleton h={190} r={10} /> : <AvailableBreakdown i={i} m={m} set={set} />}
           <Segmented
             value={i.autoDownPayment ? 'auto' : 'manual'}
@@ -767,7 +792,7 @@ function AvailableBreakdown({ i, m, set }: { i: Inputs; m: Model; set: Props['se
       </span>
       {homeTotal > 0 && (
         <>
-          <span>− {i.worksAndFurniture > 0 ? 'Obras, decoração e recheio' : 'Decoração e recheio'}</span>
+          <span>− Recheio e obras</span>
           <span className="avail-val">−{eur(homeTotal)}</span>
         </>
       )}

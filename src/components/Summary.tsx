@@ -114,7 +114,7 @@ export function Kpis({ m, i, noOther }: { m: Model; i: Inputs; noOther?: Model |
             { label: m.youngSavings > 0 ? 'Impostos (IMT Jovem)' : 'Impostos', value: eur(up('imt', 'imtCessao', 'isCompra', 'isCredito')) },
             { label: 'Escritura e registos', value: eur(up('escritura', 'solicitador')) },
             up('avaliacao', 'dossier') > 0 && { label: 'Banco', value: eur(up('avaliacao', 'dossier')) },
-            up('obras', 'recheio') > 0 && { label: 'Obras e recheio', value: eur(up('obras', 'recheio')) },
+            up('obras', 'recheio') > 0 && { label: 'Recheio e obras', value: eur(up('obras', 'recheio')) },
           ]}
         />
       </div>
@@ -339,7 +339,7 @@ export function SummaryTab({ m, i }: { m: Model; i: Inputs }) {
             { label: 'Preço do imóvel', value: i.price, color: 'var(--s1)' },
             { label: 'Juros', value: w.totalInterest, color: 'var(--s2)' },
             { label: 'Impostos e custos iniciais', value: m.upfrontTotal - i.worksAndFurniture - i.furnishing, color: 'var(--s3)' },
-            { label: 'Obras, decoração e recheio', value: i.worksAndFurniture + i.furnishing, color: 'var(--s7)' },
+            { label: 'Recheio e obras', value: i.worksAndFurniture + i.furnishing, color: 'var(--s7)' },
             { label: 'Seguros', value: w.totalInsurance, color: 'var(--s4)' },
             { label: 'Comissões (amortização e mensais)', value: w.totalExtraFees + w.totalBankFees, color: 'var(--s5)' },
           ]}

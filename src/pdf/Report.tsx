@@ -433,7 +433,7 @@ export function Report({ inputs: i, model: m, scenarios, generatedAt }: { inputs
             <KV label="Poupança / investimentos" value={`${eur(i.cash)} / ${eur(i.investments)}`} />
             <KV label="Investimentos resgatados" value={eur(i.investmentsUsed)} />
             <KV label="Fundo de emergência" value={eur(i.emergencyReserve)} />
-            <KV label="Decoração inicial e recheio" value={eur(i.furnishing)} note={i.worksAndFurniture ? `+ obras ${eur(i.worksAndFurniture)}` : undefined} />
+            <KV label="Recheio e obras" value={eur(i.furnishing)} note={i.worksAndFurniture ? `+ obras ${eur(i.worksAndFurniture)}` : undefined} />
             <KV label="Disponível para a entrada" value={eur(m.availableForDownPayment)} note="Depois de impostos, custos, recheio e fundo de emergência" />
             <KV label={m.autoDownPayment ? 'Entrada (automática)' : 'Entrada'} value={eur(m.downPayment)} note={`Mínimo: ${eur(m.minDownPayment)} (LTV ${RULES.maxLtvHpp}%)`} />
             <KV label="Compradores" value={i.buyers.map((x) => `${x.age} anos${x.youngEligible && x.age <= 35 ? ' (IMT Jovem)' : ''}`).join(', ')} />

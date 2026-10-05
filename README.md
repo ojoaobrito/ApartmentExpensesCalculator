@@ -54,7 +54,7 @@ O Simulador Casa junta tudo isto numa só página, com dados reais de mercado e 
 ### Imóvel e capitais próprios
 - Preço, avaliação bancária, área (€/m² comparado com a mediana de avaliação do INE), VPT, condomínio, taxa de IMI por município e isenção de 3 ou 5 anos.
 - Compra por **cedência de posição contratual**, com o IMT sobre o prémio pago ao cedente quando o CPCV tem cláusula de livre cedência.
-- Poupança, investimentos a resgatar (com imposto sobre mais-valias), decoração e recheio, fundo de emergência.
+- Poupança, investimentos a resgatar (com imposto sobre mais-valias), recheio e obras, fundo de emergência.
 - Custos da compra editáveis linha a linha: Imposto do Selo do crédito, escritura e registos, avaliação, dossier, solicitador.
 
 ### Despesas do dia a dia (opcional)
