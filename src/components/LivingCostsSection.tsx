@@ -1,7 +1,7 @@
 import type { Inputs } from '../state';
 import { X } from 'lucide-react';
 import type { Model } from '../model';
-import { DEFAULT_LIVING_COSTS, LIVING_COSTS_SOURCE, MONTHS_PT, type LivingCost } from '../data/livingCosts';
+import { DEFAULT_LIVING_COSTS, EXAMPLE_LIVING_COSTS, LIVING_COSTS_SOURCE, MONTHS_PT, type LivingCost } from '../data/livingCosts';
 import { eur } from '../lib/format';
 import { Check, InlineNumber, Section } from './ui';
 import { IconCart } from './icons';
@@ -16,12 +16,14 @@ interface Props {
   synced?: boolean;
   /** Despesas ainda a chegar da app de Finanças */
   loading?: boolean;
+  /** Dono da app (lista importada da folha dele); os outros veem uma lista de exemplo */
+  owner?: boolean;
 }
 
 /** "mensal" ou "anual-<mês>" num só seletor, para caber numa linha */
 const freqValue = (c: LivingCost) => (c.frequency === 'mensal' ? 'mensal' : `anual-${c.month ?? 1}`);
 
-export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced, loading }: Props) {
+export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced, loading, owner = true }: Props) {
   const items = i.livingCosts;
   const update = (id: string, p: Partial<LivingCost>) => set('livingCosts', items.map((c) => (c.id === id ? { ...c, ...p } : c)));
   const remove = (id: string) => set('livingCosts', items.filter((c) => c.id !== id));
@@ -56,6 +58,8 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced,
           </a>{' '}
           (sem as que acabam com a compra, como a renda). Edita lá; aqui atualiza sozinho. Os valores anuais contam como 1/12 por mês.
         </span>
+      ) : !owner ? (
+        <span className="hint">Lista de exemplo com valores típicos: ajusta, desliga ou acrescenta as tuas despesas. Os valores anuais contam como 1/12 por mês.</span>
       ) : (
         <span className="hint">
           Importado da{' '}
@@ -149,11 +153,11 @@ export function LivingCostsSection({ inputs: i, set, model: m, keywords, synced,
               type="button"
               className="btn small"
               onClick={() => {
-                if (confirm('Repor as despesas com os valores importados da folha? As tuas alterações nesta lista perdem-se.'))
-                  set('livingCosts', DEFAULT_LIVING_COSTS.map((c) => ({ ...c })));
+                if (confirm(`Repor as despesas com ${owner ? 'os valores importados da folha' : 'a lista de exemplo'}? As tuas alterações nesta lista perdem-se.`))
+                  set('livingCosts', (owner ? DEFAULT_LIVING_COSTS : EXAMPLE_LIVING_COSTS).map((c) => ({ ...c })));
               }}
             >
-              Repor valores da folha
+              {owner ? 'Repor valores da folha' : 'Repor lista de exemplo'}
             </button>
           </div>}
         </>

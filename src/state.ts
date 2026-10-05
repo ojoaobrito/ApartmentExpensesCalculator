@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AmortMode, ExtraPlan, LumpSum, RateType } from './lib/loan';
 import { DEFAULTS, EURIBOR_SCENARIOS, LISTING } from './data/market';
 import { STAMP_LOAN_PCT } from './lib/taxes';
-import { DEFAULT_LIVING_COSTS, type LivingCost } from './data/livingCosts';
+import { DEFAULT_LIVING_COSTS, EXAMPLE_LIVING_COSTS, type LivingCost } from './data/livingCosts';
 
 export interface Buyer {
   id: string;
@@ -153,6 +153,43 @@ export const defaultInputs = (): Inputs => ({
   capitalGainsTaxPct: 28,
 });
 
+/**
+ * Valores iniciais para quem não é o dono: um caso típico, sem nada pessoal
+ * (sem o anúncio, sem a app de Finanças, capital e salário mais baixos).
+ */
+export const guestInputs = (): Inputs => ({
+  ...defaultInputs(),
+  price: 150_000,
+  valuation: 150_000,
+  areaM2: 80,
+  listingUrl: '',
+  vpt: 70_000,
+  assignment: false,
+  condoMonthly: 30,
+  furnishing: 4_000,
+
+  cash: 40_000,
+  investments: 0,
+  investmentsUsed: 0,
+  emergencyReserve: 3_000,
+  downPayment: 20_000,
+
+  buyers: [{ id: 'b1', age: 30, sharePct: 100, youngEligible: true }],
+
+  goalEnabled: false,
+  targetYears: 20,
+  extraPlan: { enabled: false, amount: 2_000, everyMonths: 12, startMonth: 12, endMonth: 0 },
+
+  netMonthlyIncome: 1_700,
+
+  livingCostsEnabled: false,
+  livingCosts: EXAMPLE_LIVING_COSTS.map((c) => ({ ...c })),
+  useFinanceData: false,
+});
+
+export type ProfileKind = 'owner' | 'guest';
+export const defaultsFor = (kind: ProfileKind) => (kind === 'owner' ? defaultInputs() : guestInputs());
+
 const KEY = 'casa-sim:inputs:v2';
 
 function load<T>(key: string, fallback: T): T {
@@ -184,12 +221,37 @@ function migrate(p: Partial<Inputs>): Partial<Inputs> {
 }
 
 /** Completa inputs gravados com versões antigas com os valores por defeito atuais */
-export const withDefaults = (p: Partial<Inputs>): Inputs => ({ ...defaultInputs(), ...p });
+export const withDefaults = (p: Partial<Inputs>, kind: ProfileKind = 'owner'): Inputs => ({ ...defaultsFor(kind), ...p });
 
-export function useInputs() {
-  const [inputs, setInputs] = useState<Inputs>(() => withDefaults(migrate(load<Partial<Inputs>>(KEY, {}))));
-  useEffect(() => save(KEY, inputs), [inputs]);
+/**
+ * Inputs da simulação, gravados neste browser. Num browser novo, começa com os
+ * valores de exemplo e, quando se sabe quem é (kind), passa aos valores
+ * iniciais dessa pessoa.
+ */
+export function useInputs(kind: ProfileKind | null) {
+  const [fresh, setFresh] = useState(() => load<Partial<Inputs> | null>(KEY, null) === null);
+  const [inputs, setInputs] = useState<Inputs>(() => {
+    const stored = load<Partial<Inputs> | null>(KEY, null);
+    return stored ? withDefaults(migrate(stored)) : guestInputs();
+  });
+  // Primeira visita: aplica os valores iniciais certos assim que se sabe quem é
+  if (fresh && kind) {
+    setFresh(false);
+    setInputs(defaultsFor(kind));
+  }
+  // Só grava depois de escolhidos os valores iniciais (senão um recarregamento rápido ficava com os de exemplo)
+  useEffect(() => {
+    if (!fresh) save(KEY, inputs);
+  }, [inputs, fresh]);
   const set = <K extends keyof Inputs>(k: K, v: Inputs[K]) => setInputs((s) => ({ ...s, [k]: v }));
   const patch = (p: Partial<Inputs>) => setInputs((s) => ({ ...s, ...p }));
-  return { inputs, set, patch, reset: () => setInputs(defaultInputs()), replace: setInputs };
+  return {
+    inputs,
+    /** Ainda à espera de saber quem é para mostrar os valores iniciais */
+    awaitingProfile: fresh,
+    set,
+    patch,
+    reset: () => setInputs(defaultsFor(kind ?? 'guest')),
+    replace: setInputs,
+  };
 }

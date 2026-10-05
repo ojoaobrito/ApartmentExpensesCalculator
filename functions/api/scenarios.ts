@@ -1,6 +1,8 @@
 /**
  * Cloudflare Pages Function — /api/scenarios
- * Guarda os cenários num único valor do Workers KV (binding SCENARIOS).
+ * Guarda os cenários no Workers KV (binding SCENARIOS), uma lista por pessoa:
+ * o dono (OWNER_EMAILS) usa a chave "scenarios"; qualquer outra pessoa
+ * autorizada pelo Cloudflare Access tem a sua ("scenarios:<email>").
  * Se a variável APP_TOKEN estiver definida, exige `Authorization: Bearer <APP_TOKEN>`.
  *
  *   GET            → lista de cenários
@@ -8,11 +10,14 @@
  *   DELETE ?id=…   → apaga
  */
 
+import { verifyAccess, type AccessEnv } from '../lib/access';
+import { isOwner, type OwnerEnv } from '../lib/owner';
+
 interface KV {
   get(key: string, type: 'json'): Promise<unknown>;
   put(key: string, value: string): Promise<void>;
 }
-interface Env {
+interface Env extends AccessEnv, OwnerEnv {
   SCENARIOS: KV;
   APP_TOKEN?: string;
 }
@@ -23,7 +28,6 @@ interface Scenario {
   inputs: Record<string, unknown>;
 }
 
-const KEY = 'scenarios';
 const MAX_BYTES = 2_000_000;
 
 const json = (data: unknown, status = 200) =>
@@ -47,6 +51,9 @@ function isScenario(x: unknown): x is Scenario {
 
 export const onRequest = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
   if (!authorized(request, env)) return json({ error: 'unauthorized' }, 401);
+  const auth = await verifyAccess(request, env);
+  if (!auth.ok) return json({ error: auth.error }, auth.status === 401 ? 403 : auth.status);
+  const KEY = isOwner(auth.email, env) ? 'scenarios' : `scenarios:${auth.email.trim().toLowerCase()}`;
 
   const list = ((await env.SCENARIOS.get(KEY, 'json')) as Scenario[] | null) ?? [];
 

@@ -70,6 +70,21 @@ export const DEFAULT_LIVING_COSTS: LivingCost[] = [
   a('benfica', 'Quotas Benfica', 'Outro', 100, 1),
 ];
 
+/** Lista de exemplo para quem não é o dono da app (valores típicos, para ajustar) */
+export const EXAMPLE_LIVING_COSTS: LivingCost[] = [
+  m('ex-supermercado', 'Supermercado', 'Casa', 200),
+  m('ex-luz-gas', 'Luz e gás', 'Casa', 55),
+  m('ex-agua', 'Água', 'Casa', 18),
+  m('ex-internet', 'Internet e telemóvel', 'Casa', 35),
+  m('ex-transportes', 'Transportes / combustível', 'Carro', 70),
+  m('ex-saude', 'Saúde e farmácia', 'Saúde', 20),
+  m('ex-lazer', 'Lazer e restaurantes', 'Outro', 80),
+  m('ex-subscricoes', 'Subscrições', 'Software', 15),
+  m('ex-poupanca', 'Poupança mensal', 'Investimento', 100, true),
+  a('ex-seguro-carro', 'Seguro do carro', 'Carro', 180, 1),
+  a('ex-iuc', 'IUC', 'Carro', 60, 4),
+];
+
 export const MONTHS_PT = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
 export const MONTHS_PT_LONG = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 

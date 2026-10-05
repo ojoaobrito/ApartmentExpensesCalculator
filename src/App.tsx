@@ -3,6 +3,7 @@ import { IconBook, IconBookmark, IconCalendar, IconChart, IconPie } from './comp
 import { useScrollFade } from './components/useScrollFade';
 import { applyFinance, useFinanceSync } from './financeSync';
 import { useInputs, withDefaults } from './state';
+import { useProfile } from './profile';
 import { useScenarios } from './storage';
 import { compute } from './model';
 import { RESEARCH_DATE } from './data/market';
@@ -26,13 +27,16 @@ const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
 type Theme = 'auto' | 'light' | 'dark';
 
 export default function App() {
-  const { inputs, set, patch, reset, replace } = useInputs();
+  const profile = useProfile();
+  const kind = profile.status === 'ready' ? (profile.owner ? 'owner' : 'guest') : null;
+  const owner = kind !== 'guest';
+  const { inputs, awaitingProfile, set, patch, reset, replace } = useInputs(kind);
   const scenarios = useScenarios();
   const finance = useFinanceSync();
-  // Com a app de Finanças ligada, os capitais próprios e as despesas vêm de lá
-  const synced = inputs.useFinanceData && finance.status === 'ready';
-  // Enquanto os valores da app de Finanças chegam, os números ficam em esqueleto (não saltam)
-  const pending = inputs.useFinanceData && finance.status === 'loading';
+  // Com a app de Finanças ligada (só o dono), os capitais próprios e as despesas vêm de lá
+  const synced = owner && inputs.useFinanceData && finance.status === 'ready';
+  // Enquanto não se sabe quem é (1.ª visita) ou os valores da app de Finanças chegam, os números ficam em esqueleto
+  const pending = awaitingProfile || (owner && inputs.useFinanceData && finance.status === 'loading');
   const effective = useMemo(() => (synced && finance.data ? applyFinance(inputs, finance.data) : inputs), [synced, finance, inputs]);
   const model = useMemo(() => compute(effective), [effective]);
   const [tab, setTabState] = useState<Tab>('resumo');
@@ -157,7 +161,7 @@ export default function App() {
         )}
       </div>
       <div className="layout">
-        <InputsPanel inputs={effective} set={set} patch={patch} model={model} finance={finance} synced={synced} />
+        <InputsPanel inputs={effective} set={set} patch={patch} model={model} finance={finance} synced={synced} pending={pending} owner={owner} />
         <main className="results" ref={resultsRef}>
           {pending ? (
             <>
@@ -196,7 +200,23 @@ export default function App() {
           {!pending && tab === 'graficos' && <ChartsTab m={model} />}
           {!pending && tab === 'tabela' && <ScheduleTable result={model.withExtras} />}
           {tab === 'cenarios' && (
-            <ScenariosTab inputs={effective} model={model} store={scenarios} onLoad={(s) => replace(withDefaults(s.inputs))} />
+            <ScenariosTab
+              inputs={effective}
+              model={model}
+              store={scenarios}
+              extras={() => ({
+                finance: synced && finance.data ? { updatedAt: finance.data.updatedAt, liquid: finance.data.liquid, invested: finance.data.invested } : undefined,
+                openSections: [...document.querySelectorAll('details.section[open] .sec-title')].map((el) => el.textContent ?? ''),
+              })}
+              onLoad={(s) => {
+                // Repõe exatamente o que foi gravado: os valores da app de Finanças ficam os da altura
+                replace(withDefaults({ ...s.inputs, useFinanceData: false }, kind ?? 'guest'));
+                const open = s.extras?.openSections;
+                if (open)
+                  for (const d of document.querySelectorAll<HTMLDetailsElement>('details.section'))
+                    d.open = open.includes(d.querySelector('.sec-title')?.textContent ?? '');
+              }}
+            />
           )}
           {tab === 'fontes' && <SourcesTab />}
           </div>

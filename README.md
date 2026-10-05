@@ -141,6 +141,19 @@ yarn wrangler pages secret put APP_TOKEN --project-name simulador-casa
 
 e atualiza a constante `BUILT_IN_TOKEN` em `src/storage.ts`, que tem de coincidir.
 
+### Partilhar com outras pessoas
+
+Quem entra pelo Cloudflare Access é identificado pelo email (`/api/me`):
+
+- **Dono** (emails no segredo `OWNER_EMAILS`, separados por vírgulas): começa com os valores próprios, tem a ligação à app de Finanças e usa a lista de cenários principal.
+- **Qualquer outra pessoa** autorizada no Access: começa com valores de exemplo (sem anúncio nem dados pessoais), não vê a ligação à app de Finanças (`/api/finance` responde 403) e tem a sua própria lista de cenários (`scenarios:<email>` no KV).
+
+```sh
+yarn wrangler pages secret put OWNER_EMAILS --project-name simulador-casa
+```
+
+Cada cenário guarda tudo o que está no ecrã: todos os parâmetros (incluindo o anúncio e as despesas), os valores da app de Finanças dessa altura e as secções abertas. Ao carregar, repõe-se exatamente isso.
+
 ## Arquitetura
 
 ```

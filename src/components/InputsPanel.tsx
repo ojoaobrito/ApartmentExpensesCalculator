@@ -18,6 +18,10 @@ import { Skeleton } from './Skeleton';
 interface Props {
   finance: FinanceSync;
   synced: boolean;
+  /** Valores ainda a chegar (esqueletos no que depende deles) */
+  pending: boolean;
+  /** Dono da app (vê a ligação à app de Finanças) */
+  owner: boolean;
   inputs: Inputs;
   set: <K extends keyof Inputs>(k: K, v: Inputs[K]) => void;
   patch: (p: Partial<Inputs>) => void;
@@ -48,14 +52,12 @@ const SECTION_KEYWORDS = {
 /** "ano 2, mês 1" para o mês 13 do contrato */
 const monthLabel = (m: number) => `Ano ${Math.ceil(m / 12)}, mês ${((m - 1) % 12) + 1}`;
 
-export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }: Props) {
+export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, pending, owner }: Props) {
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const asideRef = useRef<HTMLElement>(null);
   useScrollFade(asideRef);
   const emptyRef = useRef<HTMLDivElement>(null);
-  // Valores da app de Finanças ainda a chegar: esqueletos no que depende deles
-  const pending = i.useFinanceData && finance.status === 'loading';
 
   // Filtra secções, destaca os campos encontrados e faz scroll até ao primeiro
   useLayoutEffect(() => {
@@ -211,7 +213,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
         loading={pending}
         badge={<span className={`pill ${m.cashLeft < 0 ? 'crit' : m.cashLeft < i.emergencyReserve ? 'warn' : 'good'}`}>LTV {m.ltv.toFixed(0)}%</span>}
       >
-        <FinanceLink finance={finance} synced={synced} on={i.useFinanceData} setOn={(v) => set('useFinanceData', v)} />
+        {owner && <FinanceLink finance={finance} synced={synced} on={i.useFinanceData} setOn={(v) => set('useFinanceData', v)} />}
         <div className="row2">
           <NumberField label="Poupança (liquidez)" value={i.cash} onChange={(v) => set('cash', v)} suffix="€" step={1000} min={0} disabled={synced} loading={pending} hint={synced ? 'Da app de Finanças' : undefined} />
           <NumberField label="Investimentos" value={i.investments} onChange={(v) => patch({ investments: v, investmentsUsed: Math.min(i.investmentsUsed, v) })} suffix="€" step={1000} min={0} disabled={synced} loading={pending} hint={synced ? 'Da app de Finanças' : undefined} />
@@ -634,7 +636,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced }
       </Section>
 
       {/* ---------------- DESPESAS DO DIA A DIA ---------------- */}
-      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} loading={pending} />
+      <LivingCostsSection inputs={i} set={set} model={m} keywords={SECTION_KEYWORDS.despesas} synced={synced} loading={pending} owner={owner} />
       </SearchContext.Provider>
     </aside>
   );
@@ -758,7 +760,7 @@ function FinanceLink({ finance, synced, on, setOn }: { finance: FinanceSync; syn
         <Skeleton w="88%" h={10} />
       </div>
     ) : null;
-  if (finance.status === 'unavailable' && finance.reason === 'no_api') return null;
+  if (finance.status === 'unavailable' && (finance.reason === 'no_api' || finance.reason === 'not_owner')) return null;
   if (finance.status === 'unavailable')
     return (
       <div className="finance-link off">

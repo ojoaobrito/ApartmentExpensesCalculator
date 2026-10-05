@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Skeleton } from './Skeleton';
 import { X } from 'lucide-react';
 import { withDefaults, type Inputs } from '../state';
-import { exportScenarios, parseScenarioFile, type SavedScenario, type useScenarios } from '../storage';
+import { exportScenarios, parseScenarioFile, type SavedScenario, type ScenarioExtras, type useScenarios } from '../storage';
 import { compute, type Model } from '../model';
 import { yearly } from '../lib/loan';
 import { duration, eur, eurC, pct, pctAxis, pctFmt } from '../lib/format';
@@ -77,7 +77,7 @@ export function ChartsTab({ m }: { m: Model }) {
 // ---------------------------------------------------------------------------
 type ScenarioStore = ReturnType<typeof useScenarios>;
 
-export function ScenariosTab(props: { inputs: Inputs; model: Model; store: ScenarioStore; onLoad: (s: SavedScenario) => void }) {
+export function ScenariosTab(props: { inputs: Inputs; model: Model; store: ScenarioStore; extras: () => ScenarioExtras; onLoad: (s: SavedScenario) => void }) {
   const { store } = props;
   const [name, setName] = useState('');
   const [token, setToken] = useState('');
@@ -145,7 +145,7 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
           style={{ display: 'flex', gap: 8 }}
           onSubmit={(e) => {
             e.preventDefault();
-            void store.add(name.trim() || `Cenário ${store.list.length + 1}`, props.inputs);
+            void store.add(name.trim() || `Cenário ${store.list.length + 1}`, props.inputs, props.extras());
             setName('');
           }}
         >
@@ -173,15 +173,18 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
           {store.list.map((s) => (
             <div key={s.id} className="scenario-item">
               <span className="name">{s.name}</span>
-              <span className="muted small">{new Date(s.savedAt).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}</span>
-              <button className="btn small" onClick={() => props.onLoad(s)} title="Substitui os parâmetros atuais por este cenário">
+              <span className="muted small">
+                {new Date(s.savedAt).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}
+                {s.extras?.finance && ' · com os valores da app de Finanças dessa altura'}
+              </span>
+              <button className="btn small" onClick={() => props.onLoad(s)} title="Repõe tudo como estava ao gravar (valores, anúncio, despesas e secções abertas)">
                 Carregar
               </button>
               <button
                 className="btn small"
                 title="Grava os parâmetros atuais por cima deste cenário"
                 onClick={() => {
-                  if (confirm(`Substituir "${s.name}" pelos parâmetros atuais?`)) void store.overwrite(s.id, props.inputs);
+                  if (confirm(`Substituir "${s.name}" pelos parâmetros atuais?`)) void store.overwrite(s.id, props.inputs, props.extras());
                 }}
               >
                 Atualizar

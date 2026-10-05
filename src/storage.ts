@@ -8,11 +8,21 @@ import type { Inputs } from './state';
  * uma cópia local, e é possível exportar/importar um ficheiro JSON.
  */
 
+/** O resto do que estava no ecrã quando se gravou */
+export interface ScenarioExtras {
+  /** Valores da app de Finanças usados (ficam congelados no cenário) */
+  finance?: { updatedAt: string; liquid: number; invested: number };
+  /** Secções do painel que estavam abertas */
+  openSections?: string[];
+}
+
 export interface SavedScenario {
   id: string;
   name: string;
   savedAt: string;
+  /** Todos os parâmetros, já com os valores da app de Finanças aplicados (anúncio, despesas, plano…) */
   inputs: Inputs;
+  extras?: ScenarioExtras;
 }
 
 export type StorageMode = 'loading' | 'cloud' | 'local' | 'locked';
@@ -111,14 +121,14 @@ export function useScenarios() {
     list,
     mode,
     error,
-    add: (name: string, inputs: Inputs) => {
-      const s: SavedScenario = { id: crypto.randomUUID(), name, savedAt: new Date().toISOString(), inputs };
+    add: (name: string, inputs: Inputs, extras?: ScenarioExtras) => {
+      const s: SavedScenario = { id: crypto.randomUUID(), name, savedAt: new Date().toISOString(), inputs, extras };
       return persist([...list, s], () => call('PUT', s));
     },
-    overwrite: (id: string, inputs: Inputs) => {
+    overwrite: (id: string, inputs: Inputs, extras?: ScenarioExtras) => {
       const old = list.find((s) => s.id === id);
       if (!old) return;
-      const s = { ...old, inputs, savedAt: new Date().toISOString() };
+      const s = { ...old, inputs, extras, savedAt: new Date().toISOString() };
       return persist(
         list.map((x) => (x.id === id ? s : x)),
         () => call('PUT', s),
