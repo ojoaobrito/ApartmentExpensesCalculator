@@ -67,7 +67,7 @@ export default function App() {
     place();
     window.addEventListener('resize', place);
     return () => window.removeEventListener('resize', place);
-  }, [tab]);
+  }, [tab, scenarios.list.length]);
   const [exporting, setExporting] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
   useScrollFade(resultsRef);
@@ -195,6 +195,11 @@ export default function App() {
                   {t.icon}
                 </span>
                 {t.label}
+                {t.id === 'cenarios' && scenarios.list.length > 0 && (
+                  <span className="tab-count" aria-label={`${scenarios.list.length} cenários gravados`}>
+                    {scenarios.list.length}
+                  </span>
+                )}
               </button>
             ))}
             <span className="tab-indicator" ref={indicatorRef} aria-hidden />

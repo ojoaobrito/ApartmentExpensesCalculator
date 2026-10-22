@@ -495,3 +495,6 @@ dialog.modal { animation: modal-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .modal-foot > .btn:last-child { margin-left: auto; }
 .fee-in-use { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; color: var(--text-2); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
 .fee-in-use b { color: var(--text); font-size: 13px; }
+/* Contador no separador (p.ex. cenários gravados) */
+.tab-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); }
+.tabs button.on .tab-count { color: #fff; background: var(--accent); border-color: var(--accent); }
