@@ -88,7 +88,8 @@ export function useScenarios() {
       // Primeira ligação: envia para a nuvem os cenários que só existiam neste browser
       const missing = readLocal().filter((l) => !remote.some((r) => r.id === l.id));
       for (const s of missing) await call('PUT', s);
-      const merged = [...remote, ...missing].sort((a, b) => a.savedAt.localeCompare(b.savedAt));
+      // Mantém a ordem gravada na nuvem (escolhida pela pessoa); os que só existiam aqui vão para o fim
+      const merged = [...remote, ...missing];
       setList(merged);
       writeLocal(merged);
       setMode('cloud');
@@ -148,6 +149,12 @@ export function useScenarios() {
         list.filter((s) => s.id !== id),
         () => call('DELETE', undefined, id),
       ),
+    /** Nova ordem (ids), gravada na nuvem para valer em qualquer dispositivo */
+    reorder: (ids: string[]) => {
+      const rank = new Map(ids.map((id, k) => [id, k]));
+      const next = [...list].sort((a, b) => (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity));
+      return persist(next, () => call('PATCH', { order: ids }));
+    },
     importMany: async (items: SavedScenario[]) => {
       const fresh = items.filter((it) => !list.some((l) => l.id === it.id));
       const next = [...list, ...fresh];

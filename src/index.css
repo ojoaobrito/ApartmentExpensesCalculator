@@ -498,3 +498,7 @@ dialog.modal { animation: modal-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 /* Contador no separador (p.ex. cenários gravados) */
 .tab-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); }
 .tabs button.on .tab-count { color: #fff; background: var(--accent); border-color: var(--accent); }
+/* Pega de arrasto dentro de uma linha (p.ex. cenários) */
+.drag-handle.inline { position: static; width: 18px; height: 24px; margin-left: -6px; opacity: 0.55; border-radius: 6px; flex: none; }
+.scenario-item:hover .drag-handle.inline, .drag-handle.inline:focus-visible, .sort-slot.is-dragging .drag-handle.inline { opacity: 1; }
+.sort-slot.is-dragging > .scenario-item { box-shadow: 0 14px 34px rgb(0 0 0 / 0.28); border-color: var(--accent); }

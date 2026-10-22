@@ -8,6 +8,7 @@
  *   GET            → lista de cenários
  *   PUT  {cenário} → cria ou atualiza (por id)
  *   DELETE ?id=…   → apaga
+ *   PATCH {order}  → reordena (lista de ids; os que faltarem ficam no fim)
  */
 
 import { verifyAccess, type AccessEnv } from '../lib/access';
@@ -69,6 +70,16 @@ export const onRequest = async ({ request, env }: { request: Request; env: Env }
       if (raw.length > MAX_BYTES) return json({ error: 'demasiados dados' }, 413);
       await env.SCENARIOS.put(KEY, raw);
       return json(body);
+    }
+
+    case 'PATCH': {
+      const body = (await request.json().catch(() => null)) as { order?: unknown } | null;
+      const order = body?.order;
+      if (!Array.isArray(order) || order.some((x) => typeof x !== 'string')) return json({ error: 'ordem inválida' }, 400);
+      const rank = new Map((order as string[]).map((id, k) => [id, k]));
+      const next = [...list].sort((a, b) => (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity));
+      await env.SCENARIOS.put(KEY, JSON.stringify(next));
+      return json({ ok: true });
     }
 
     case 'DELETE': {

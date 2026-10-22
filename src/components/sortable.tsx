@@ -5,12 +5,12 @@ import { GripVertical } from 'lucide-react';
 const HandleContext = createContext<{ onPointerDown: (e: RPointerEvent) => void; onKeyDown: (e: KeyboardEvent) => void; label: string } | null>(null);
 
 /** Pega ⋮⋮ no cabeçalho de uma secção: arrastar para reordenar; ↑/↓ com o teclado */
-export function DragHandle() {
+export function DragHandle({ inline = false }: { inline?: boolean }) {
   const h = useContext(HandleContext);
   if (!h) return null;
   return (
     <span
-      className="drag-handle"
+      className={`drag-handle${inline ? ' inline' : ''}`}
       role="button"
       tabIndex={0}
       aria-label={`Mover ${h.label} (arrasta, ou usa as setas ↑/↓)`}
@@ -38,7 +38,7 @@ export function SortableList({ order, items, labels, onCommit }: { order: string
   const [live, setLive] = useState(order);
   const [prevOrder, setPrevOrder] = useState(order);
   // A ordem vinda de fora (p.ex. carregada do servidor) substitui a local
-  if (order !== prevOrder) {
+  if (order.join() !== prevOrder.join()) {
     setPrevOrder(order);
     setLive(order);
   }
@@ -93,7 +93,7 @@ export function SortableList({ order, items, labels, onCommit }: { order: string
     e.stopPropagation();
     const el = refs.current.get(id);
     if (!el) return;
-    const scroller = el.closest<HTMLElement>('.inputs');
+    const scroller = el.closest<HTMLElement>('.inputs, .results');
     drag.current = { id, startY: e.clientY, startTop: el.offsetTop, startScroll: scroller?.scrollTop ?? 0, y: e.clientY, scroller };
     let current = live;
     setDragging(id);

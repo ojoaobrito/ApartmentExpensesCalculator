@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Skeleton } from './Skeleton';
+import { DragHandle, SortableList } from './sortable';
 import { ArrowRight, Pencil, RefreshCw, Wallet, X } from 'lucide-react';
 import { heroColors } from '../lib/effortColor';
 import { withDefaults, type Inputs } from '../state';
@@ -171,24 +172,32 @@ export function ScenariosTab(props: { inputs: Inputs; model: Model; store: Scena
             </div>
           )}
           {store.list.length === 0 && store.mode !== 'loading' && <div className="empty">Ainda não tens cenários gravados.</div>}
-          {store.list.map((s) => (
-            <ScenarioRow
-              key={s.id}
-              s={s}
-              m={cols.find((c) => c.id === s.id)!.model}
-              onLoad={() => props.onLoad(s)}
-              onOverwrite={() => {
-                if (confirm(`Substituir "${s.name}" pelo que está agora no ecrã?`)) void store.overwrite(s.id, props.inputs, props.extras());
-              }}
-              onRename={() => {
-                const n = prompt('Novo nome', s.name);
-                if (n && n.trim()) void store.rename(s.id, n.trim());
-              }}
-              onRemove={() => {
-                if (confirm(`Apagar "${s.name}"?`)) void store.remove(s.id);
-              }}
-            />
-          ))}
+          <SortableList
+            order={store.list.map((s) => s.id)}
+            labels={Object.fromEntries(store.list.map((s) => [s.id, s.name]))}
+            onCommit={(ids) => void store.reorder(ids)}
+            items={Object.fromEntries(
+              store.list.map((s) => [
+                s.id,
+                <ScenarioRow
+                  key={s.id}
+                  s={s}
+                  m={cols.find((c) => c.id === s.id)!.model}
+                  onLoad={() => props.onLoad(s)}
+                  onOverwrite={() => {
+                    if (confirm(`Substituir "${s.name}" pelo que está agora no ecrã?`)) void store.overwrite(s.id, props.inputs, props.extras());
+                  }}
+                  onRename={() => {
+                    const n = prompt('Novo nome', s.name);
+                    if (n && n.trim()) void store.rename(s.id, n.trim());
+                  }}
+                  onRemove={() => {
+                    if (confirm(`Apagar "${s.name}"?`)) void store.remove(s.id);
+                  }}
+                />,
+              ]),
+            )}
+          />
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
@@ -313,16 +322,16 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
     { label: 'Prestação', value: eurC(w.firstPayment), title: 'Prestação do 1.º mês (capital + juros)' },
     {
       label: 'Crédito',
-      title: `Contrato de ${s.inputs.termYears} anos, liquidado em ${duration(w.payoffMonth)}`,
+      title: `Contrato de ${(m.params.termMonths / 12)} anos, liquidado em ${duration(w.payoffMonth)}`,
       value:
-        w.payoffMonth < s.inputs.termYears * 12 ? (
+        w.payoffMonth < (m.params.termMonths / 12) * 12 ? (
           <span className="sc-term">
-            <span className="sc-term-from">{s.inputs.termYears} anos</span>
+            <span className="sc-term-from">{(m.params.termMonths / 12)} anos</span>
             <ArrowRight size={13} strokeWidth={2.4} aria-label="liquidado em" />
             {duration(w.payoffMonth)}
           </span>
         ) : (
-          `${s.inputs.termYears} anos`
+          `${(m.params.termMonths / 12)} anos`
         ),
     },
     { label: 'Juros', value: eur(w.totalInterest) },
@@ -332,6 +341,7 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
     <div className="scenario-item" style={{ ['--tone' as string]: c.solid, ['--tone-ink' as string]: c.ink }}>
       <div className="sc-main">
         <div className="sc-head">
+          <DragHandle inline />
           <span className="sc-name">{s.name}</span>
           <span className="sc-verdict">
             {EFFORT_LABEL[m.effortStatus]}
