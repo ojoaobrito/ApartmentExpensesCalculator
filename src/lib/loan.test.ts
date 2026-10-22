@@ -95,3 +95,19 @@ describe('loan engine', () => {
     expect(estimateTAEG(r, 100_000, 2000)).toBeGreaterThan(3.1);
   });
 });
+
+describe('comissão de amortização antecipada', () => {
+  it('é uma percentagem de cada amortização (3000 € a 0,5% = 15 € + 4% de IS)', () => {
+    const p: LoanParams = { ...base, rateType: 'variavel', stampDutyFeesPct: 4, lumpSums: [{ id: 'x', month: 3, amount: 3_000 }] };
+    const r = simulate(p);
+    const row = r.rows.find((x) => x.month === 3)!;
+    expect(row.extra).toBe(3_000);
+    expect(row.extraFee).toBeCloseTo(15.6, 6);
+    expect(r.totalExtraFees).toBeCloseTo(15.6, 6);
+  });
+  it('em taxa fixa usa a comissão da taxa fixa; sem comissão se suspensa em variável', () => {
+    const lump = [{ id: 'x', month: 3, amount: 3_000 }];
+    expect(simulate({ ...base, rateType: 'fixa', lumpSums: lump }).totalExtraFees).toBeCloseTo(60, 6);
+    expect(simulate({ ...base, rateType: 'variavel', feeVariableWaived: true, lumpSums: lump }).totalExtraFees).toBe(0);
+  });
+});

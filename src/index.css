@@ -493,3 +493,5 @@ dialog.modal { animation: modal-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .alerts-group-title { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-3); margin: 12px 0 0; }
 @media (max-width: 640px) { .alerts-bar { flex-wrap: wrap; } .alerts-top { flex-basis: 100%; order: 3; } }
 .modal-foot > .btn:last-child { margin-left: auto; }
+.fee-in-use { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; color: var(--text-2); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+.fee-in-use b { color: var(--text); font-size: 13px; }

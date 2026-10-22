@@ -2,7 +2,7 @@ import type { Inputs } from '../state';
 import { ChevronsDownUp, ChevronsUpDown, ExternalLink, X } from 'lucide-react';
 import type { Model } from '../model';
 import { BANK_OFFERS, EURIBOR, EURIBOR_SCENARIOS, IMI_PRESETS, LISTING, LOCAL_MARKET, RULES, YOUNG_REGISTRY_DISCOUNT } from '../data/market';
-import { eur, pct } from '../lib/format';
+import { eur, eurC, pct } from '../lib/format';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Check, InlineNumber, NumberField, Section, Segmented, SelectField, SourceLink } from './ui';
 import { NumberInput } from './NumberInput';
@@ -623,37 +623,41 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
             </div>
           </div>
 
-          <div className="row2">
-            <NumberField
-              label="Comissão taxa variável"
-              value={i.feeVariablePct}
-              onChange={(v) => set('feeVariablePct', v)}
-              suffix="%"
-              step={0.1}
-              min={0}
-              max={0.5}
-              source="amortizacao"
-              disabled={i.rateType === 'fixa'}
-              hint={i.rateType === 'fixa' ? 'Não se aplica em taxa fixa' : i.rateType === 'mista' ? 'Depois do período fixo' : 'Máximo legal 0,5%'}
-            />
-            <NumberField
-              label="Comissão taxa fixa"
-              value={i.feeFixedPct}
-              onChange={(v) => set('feeFixedPct', v)}
-              suffix="%"
-              step={0.1}
-              min={0}
-              max={2}
-              source="amortizacao"
-              disabled={i.rateType === 'variavel'}
-              hint={i.rateType === 'variavel' ? 'Só em taxa fixa ou mista' : i.rateType === 'mista' ? 'Durante o período fixo' : 'Máximo legal 2%'}
-            />
+          <div className={i.rateType === 'mista' ? 'row2' : undefined}>
+            {i.rateType !== 'fixa' && (
+              <NumberField
+                label={i.rateType === 'mista' ? 'Comissão depois do período fixo' : 'Comissão de amortização (taxa variável)'}
+                value={i.feeVariablePct}
+                onChange={(v) => set('feeVariablePct', v)}
+                suffix="% do valor amortizado"
+                step={0.1}
+                min={0}
+                max={0.5}
+                source="amortizacao"
+                disabled={i.feeVariableWaived}
+                hint="Máximo legal 0,5%"
+              />
+            )}
+            {i.rateType !== 'variavel' && (
+              <NumberField
+                label={i.rateType === 'mista' ? 'Comissão durante o período fixo' : 'Comissão de amortização (taxa fixa)'}
+                value={i.feeFixedPct}
+                onChange={(v) => set('feeFixedPct', v)}
+                suffix="% do valor amortizado"
+                step={0.1}
+                min={0}
+                max={2}
+                source="amortizacao"
+                hint="Máximo legal 2%"
+              />
+            )}
           </div>
           {i.rateType !== 'fixa' && (
             <Check checked={i.feeVariableWaived} onChange={(v) => set('feeVariableWaived', v)}>
               Simular sem a comissão de 0,5% em taxa variável (se o projeto de lei passar) <SourceLink id="amortizacao" />
             </Check>
           )}
+          <FeeInUse i={i} m={m} />
           <span className="hint">Comissões sujeitas a Imposto do Selo de 4%. Pré-aviso: 7 dias (parcial), 10 dias (total).</span>
         </Section>
     ),
@@ -739,6 +743,34 @@ function PropertyCard({ i, m }: { i: Inputs; m: Model }) {
           <span className={`pill ${m.pricePerM2 > ref * 1.5 ? 'warn' : 'good'}`}>{m.pricePerM2 > ref ? `+${Math.round((m.pricePerM2 / ref - 1) * 100)}%` : 'em linha'}</span> <SourceLink id="mercado-local" />
         </div>
       )}
+    </div>
+  );
+}
+
+/** Qual a comissão de amortização que está a ser usada, com um exemplo em euros */
+function FeeInUse({ i, m }: { i: Inputs; m: Model }) {
+  const variable = i.feeVariableWaived ? 0 : i.feeVariablePct;
+  const pctNow = i.rateType === 'variavel' ? variable : i.feeFixedPct;
+  const plan = m.params.extraPlan;
+  const example = plan.enabled && plan.amount > 0 ? plan.amount : 3_000;
+  const fee = (x: number, p: number) => x * (p / 100) * 1.04;
+  const total = m.withExtras.totalExtraFees;
+  return (
+    <div className="fee-in-use">
+      <b>
+        Em uso:{' '}
+        {i.rateType === 'variavel'
+          ? i.feeVariableWaived
+            ? 'sem comissão (taxa variável, comissão suspensa)'
+            : `${pct(variable, 1)} (taxa variável)`
+          : i.rateType === 'fixa'
+            ? `${pct(i.feeFixedPct, 1)} (taxa fixa)`
+            : `${pct(i.feeFixedPct, 1)} no período fixo, depois ${pct(variable, 1)}`}
+      </b>
+      <span>
+        Aplica-se a cada amortização, sobre o valor amortizado, mais 4% de Imposto do Selo sobre a comissão. Ex.: {eur(example)} → {eurC(fee(example, pctNow))} de comissão.
+        {total > 0 && <> No teu plano: {eur(total)} no total.</>}
+      </span>
     </div>
   );
 }
