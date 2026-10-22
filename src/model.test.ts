@@ -4,7 +4,8 @@ import { defaultInputs } from './state';
 
 describe('model with defaults', () => {
   it('liquida no objetivo e calcula custos iniciais com IMT Jovem (entrada manual)', () => {
-    const m = compute({ ...defaultInputs(), autoDownPayment: false });
+    // Preço fixo nos testes (os valores por defeito mudam com o imóvel escolhido)
+    const m = compute({ ...defaultInputs(), price: 230_000, autoDownPayment: false });
     expect(m.principal).toBe(160_000);
     expect(m.ltv).toBeCloseTo(80, 5); // sobre a avaliação de 200 k€
     expect(m.minDownPayment).toBe(50_000);
@@ -15,7 +16,7 @@ describe('model with defaults', () => {
   });
 
   it('sem benefício jovem paga IMT e IS da tabela 2026', () => {
-    const i = defaultInputs();
+    const i = { ...defaultInputs(), price: 230_000 };
     const m = compute({ ...i, buyers: [{ ...i.buyers[0], age: 40 }] });
     expect(m.taxes.imt).toBeCloseTo(5_642.04, 2);
     expect(m.taxes.stamp).toBeCloseTo(1_840, 2);
@@ -71,14 +72,14 @@ describe('entrada automática', () => {
 
   it('nunca passa do preço', () => {
     const m = compute({ ...defaultInputs(), cash: 1_000_000 });
-    expect(m.downPayment).toBe(230_000);
+    expect(m.downPayment).toBe(defaultInputs().price);
     expect(m.principal).toBe(0);
   });
 });
 
 describe('custos da compra editáveis', () => {
   it('a taxa do Imposto do Selo do crédito e as comissões entram nos custos', () => {
-    const i = { ...defaultInputs(), autoDownPayment: false };
+    const i = { ...defaultInputs(), price: 230_000, autoDownPayment: false };
     const base = compute(i);
     const m = compute({ ...i, stampLoanPct: 0.5, valuationFee: 0, bankSetupFees: 100, solicitorFee: 500 });
     expect(m.stampLoan).toBeCloseTo(800, 2); // 0,5% de 160 k€

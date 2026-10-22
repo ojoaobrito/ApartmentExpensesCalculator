@@ -18,18 +18,19 @@ export const RESEARCH_DATE = '3 de outubro de 2026';
 // Imóvel (anúncio idealista 34828508, consultado a 3/out/2026)
 // ---------------------------------------------------------------------------
 export const LISTING = {
-  url: 'https://www.idealista.pt/imovel/34828508/',
-  title: 'T1 em Covilhã e Canhoso, Covilhã',
-  price: 220_000,
-  areaM2: 62,
+  url: 'https://remax.pt/pt/imoveis/venda-apartamento-t2-covilha-covilha-e-canhoso/123751564-151',
+  title: 'T2 em Covilhã e Canhoso, Covilhã (Cidade Nova)',
+  price: 255_000,
+  areaM2: 69, // área bruta privativa (62 m² úteis; 130,4 m² brutos com garagens)
   features: [
-    '62 m² área bruta',
-    '2.º andar c/ elevador',
-    'garagem',
-    'condomínio fechado c/ piscina',
-    'construção 2025 (fase final)',
+    '69 m² área bruta privativa (62 m² úteis)',
+    '2 quartos (1 suite) e 2 WC',
+    '1.º andar c/ elevador',
+    '2 lugares de garagem',
+    'condomínio fechado c/ piscina aquecida e ginásio exterior',
+    'construção 2025',
     'cedência de posição contratual',
-    'orientação sul, A/C',
+    'A/C, bomba de calor, painéis fotovoltaicos, cozinha equipada',
   ],
 };
 
