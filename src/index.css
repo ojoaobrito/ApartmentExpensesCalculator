@@ -502,3 +502,6 @@ dialog.modal { animation: modal-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .drag-handle.inline { position: static; width: 18px; height: 24px; margin-left: -6px; opacity: 0.55; border-radius: 6px; flex: none; }
 .scenario-item:hover .drag-handle.inline, .drag-handle.inline:focus-visible, .sort-slot.is-dragging .drag-handle.inline { opacity: 1; }
 .sort-slot.is-dragging > .scenario-item { box-shadow: 0 14px 34px rgb(0 0 0 / 0.28); border-color: var(--accent); }
+.k-list li.aside { margin-top: 3px; padding-top: 4px; border-top: 1px dashed var(--border); color: var(--text-3); }
+.k-list li.aside::before { top: calc(0.55em + 4px); background: transparent; border: 1px solid var(--text-3); }
+.k-list li.aside b { color: var(--text-2); font-weight: 500; }

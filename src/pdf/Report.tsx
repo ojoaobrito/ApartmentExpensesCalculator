@@ -383,7 +383,7 @@ export function Report({ inputs: i, model: m, scenarios, generatedAt }: { inputs
             sub={m.effortStatus === 'none' ? `Casa ${eur(m.monthlyTotal)} + amortizações ${eur(m.extraMonthlyEquivalent)}` : `${EFFORT_LABEL[m.effortStatus]} · ${pct(m.effortTotal, 0)} do rendimento`}
           />
           <Kpi label="Prestação inicial" value={eurC(w.firstPayment)} sub={`TAN ${pct(m.firstTan)}`} />
-          <Kpi label="Dinheiro na escritura" value={eur(m.cashNeeded)} sub={`Entrada ${eur(m.downPayment)} + custos ${eur(m.upfrontTotal)}`} />
+          <Kpi label="Dinheiro na escritura" value={eur(m.deedCash)} sub={`Entrada ${eur(m.downPayment)} + custos ${eur(m.upfrontTotal - m.homeCosts)}${m.homeCosts > 0 ? ` · depois: recheio e obras ${eur(m.homeCosts)}` : ''}`} />
           <Kpi label="Crédito liquidado em" value={duration(w.payoffMonth)} sub={`${eur(m.principal)} (LTV ${m.ltv.toFixed(0)}%) · ${i.termYears} anos`} />
           <Kpi label="Fica de reserva" value={eur(m.cashLeft)} sub={`Liquidez${m.investmentsLeft > 0 ? ` + ${eur(m.investmentsLeft)} investidos` : ''}`} />
           <Kpi label="Juros totais" value={eur(w.totalInterest)} sub={m.interestSaved > 1 ? `Poupa ${eur(m.interestSaved)} em juros` : undefined} />
@@ -458,13 +458,17 @@ export function Report({ inputs: i, model: m, scenarios, generatedAt }: { inputs
           <View style={{ flex: 1, marginRight: 10 }} wrap={false}>
             <Heading>Dinheiro no dia da escritura</Heading>
             <KV label={`Entrada (${pct((m.downPayment / i.price) * 100, 1)} do preço · LTV ${pct(m.ltv, 1)})`} value={eur(m.downPayment)} />
-            {m.upfront.map((c) => (
+            {m.upfront.filter((c) => c.key !== 'obras' && c.key !== 'recheio').map((c) => (
               <KV key={c.key} label={c.label} value={eurC(c.value)} note={c.note} />
             ))}
-            <KV total label="Total necessário" value={eur(m.cashNeeded)} />
+            <KV total label="Total no dia da escritura" value={eur(m.deedCash)} />
+            {m.upfront.filter((c) => (c.key === 'obras' || c.key === 'recheio') && c.value > 0).map((c) => (
+              <KV key={c.key} label={c.label} value={eurC(c.value)} note="Depois da escritura, também da poupança" />
+            ))}
+            {m.homeCosts > 0 && <KV total label="Total necessário" value={eur(m.cashNeeded)} />}
             <View style={{ height: 8 }} />
             <KV label="Liquidez disponível" value={eur(m.available)} />
-            <KV total label="Liquidez depois da escritura" value={eur(m.cashLeft)} />
+            <KV total label={m.homeCosts > 0 ? "Liquidez depois da escritura e do recheio" : "Liquidez depois da escritura"} value={eur(m.cashLeft)} />
             {m.youngSavings > 0 && <Text style={[S.note, { marginTop: 4 }]}>{t(`O IMT Jovem poupa ${eur(m.youngSavings)} (IMT, Imposto do Selo e emolumentos).`)}</Text>}
           </View>
           <View style={{ flex: 1 }} wrap={false}>

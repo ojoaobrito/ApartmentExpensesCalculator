@@ -149,3 +149,12 @@ describe('ligação à app de Finanças', () => {
     expect(e.netMonthlyIncome).toBe(i.netMonthlyIncome); // o rendimento continua a ser do simulador
   });
 });
+
+describe('dinheiro na escritura', () => {
+  it('não inclui o recheio e as obras, que são pagos depois (mas continuam a sair da poupança)', () => {
+    const m = compute({ ...defaultInputs(), price: 230_000, furnishing: 5_000, worksAndFurniture: 2_000 });
+    expect(m.homeCosts).toBe(7_000);
+    expect(m.deedCash).toBeCloseTo(m.cashNeeded - 7_000, 6);
+    expect(m.cashLeft).toBeCloseTo(m.available - m.cashNeeded, 6);
+  });
+});

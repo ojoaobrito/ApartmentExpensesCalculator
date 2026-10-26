@@ -19,7 +19,10 @@ function heroStyle(m: Model) {
 import { RULES } from '../data/market';
 import { duration, eur, eurC, pct } from '../lib/format';
 
-type KRow = { label: string; value: string; tone?: 'good' | 'bad' };
+/** Custos pagos depois da escritura (saem da poupança, mas não nesse dia) */
+const HOME_KEYS = ['obras', 'recheio'];
+
+type KRow = { label: string; value: string; tone?: 'good' | 'bad' | 'aside' };
 
 /** Discriminação de um cartão: uma linha por parcela, com marcador */
 function KList({ rows }: { rows: (KRow | false)[] }) {
@@ -106,14 +109,14 @@ export function Kpis({ m, i, noOther }: { m: Model; i: Inputs; noOther?: Model |
       </div>
       <div className="kpi">
         <div className="k-label">Dinheiro na escritura</div>
-        <div className="k-value">{eur(m.cashNeeded)}</div>
+        <div className="k-value">{eur(m.deedCash)}</div>
         <KList
           rows={[
             { label: 'Entrada', value: eur(m.downPayment) },
             { label: m.youngSavings > 0 ? 'Impostos (IMT Jovem)' : 'Impostos', value: eur(up('imt', 'imtCessao', 'isCompra', 'isCredito')) },
             { label: 'Escritura e registos', value: eur(up('escritura', 'solicitador')) },
             up('avaliacao', 'dossier') > 0 && { label: 'Banco', value: eur(up('avaliacao', 'dossier')) },
-            up('obras', 'recheio') > 0 && { label: 'Recheio e obras', value: eur(up('obras', 'recheio')) },
+            m.homeCosts > 0 && { label: 'Depois: recheio e obras', value: eur(m.homeCosts), tone: 'aside' },
           ]}
         />
       </div>
@@ -214,7 +217,7 @@ export function SummaryTab({ m, i }: { m: Model; i: Inputs }) {
               </td>
               <td>{eur(m.downPayment)}</td>
             </tr>
-            {m.upfront.map((c) => (
+            {m.upfront.filter((c) => !HOME_KEYS.includes(c.key)).map((c) => (
               <tr key={c.key}>
                 <td>
                   {c.label}
@@ -224,9 +227,24 @@ export function SummaryTab({ m, i }: { m: Model; i: Inputs }) {
               </tr>
             ))}
             <tr className="total">
-              <td>Total necessário</td>
-              <td>{eur(m.cashNeeded)}</td>
+              <td>Total no dia da escritura</td>
+              <td>{eur(m.deedCash)}</td>
             </tr>
+            {m.upfront.filter((c) => HOME_KEYS.includes(c.key) && c.value > 0).map((c) => (
+              <tr key={c.key}>
+                <td>
+                  {c.label}
+                  <span className="note">Depois da escritura, também da poupança</span>
+                </td>
+                <td>{eurC(c.value)}</td>
+              </tr>
+            ))}
+            {m.homeCosts > 0 && (
+              <tr className="total">
+                <td>Total necessário</td>
+                <td>{eur(m.cashNeeded)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
         <table className="kv" style={{ marginTop: 16 }}>
@@ -245,7 +263,7 @@ export function SummaryTab({ m, i }: { m: Model; i: Inputs }) {
               </tr>
             )}
             <tr className="total">
-              <td>Liquidez depois da escritura</td>
+              <td>{m.homeCosts > 0 ? 'Liquidez depois da escritura e do recheio' : 'Liquidez depois da escritura'}</td>
               <td style={{ color: m.cashLeft < 0 ? 'var(--crit)' : undefined }}>{eur(m.cashLeft)}</td>
             </tr>
             <tr>

@@ -318,7 +318,8 @@ function ScenarioRow({ s, m, onLoad, onOverwrite, onRename, onRemove }: { s: Sav
           : [];
   const figures: { label: string; value: ReactNode; bad?: boolean; title?: string }[] = [
     { label: 'Por mês', value: eurC(m.monthlyTotal + m.extraMonthlyEquivalent) },
-    { label: 'Escritura', value: eur(m.cashNeeded) },
+    { label: 'Escritura', value: eur(m.deedCash), title: 'Entrada, impostos e custos pagos no dia da escritura' },
+    ...(m.homeCosts > 0 ? [{ label: 'Recheio e obras', value: eur(m.homeCosts), title: 'Pago depois da escritura' }] : []),
     { label: 'Prestação', value: eurC(w.firstPayment), title: 'Prestação do 1.º mês (capital + juros)' },
     {
       label: 'Crédito',

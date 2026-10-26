@@ -107,6 +107,9 @@ function cashFigures(inp: Inputs) {
   const otherAtDeed = summarizeOtherCapital(inp.otherCapital ?? [], inp.deedDate).atDeed;
   const available = inp.cash + inp.investmentsUsed - investmentsTax + otherAtDeed;
   const cashNeeded = inp.downPayment + upfrontTotal;
+  // Recheio e obras saem da poupança, mas depois da escritura: não são pagos nesse dia
+  const homeCosts = inp.furnishing + inp.worksAndFurniture;
+  const deedCash = cashNeeded - homeCosts;
   const cashLeft = available - cashNeeded;
   // Capital que pode ir para a entrada depois de impostos, custos, obras, recheio e fundo de emergência
   const availableForDownPayment = Math.max(0, available - upfrontTotal - inp.emergencyReserve);
@@ -114,7 +117,7 @@ function cashFigures(inp: Inputs) {
   return {
     principal, valuation, ltv, maxLoan, minDownPayment, pricePerM2, valuationPerM2,
     taxes, stampLoan, bankUpfront, assignmentImt, upfront, upfrontTotal, youngSavings, registryDiscount,
-    investmentsTax, available, cashNeeded, cashLeft, availableForDownPayment, investmentsLeft, otherAtDeed,
+    investmentsTax, available, cashNeeded, deedCash, homeCosts, cashLeft, availableForDownPayment, investmentsLeft, otherAtDeed,
   };
 }
 
@@ -122,7 +125,7 @@ function computeWith(inp: Inputs) {
   const {
     principal, valuation, ltv, maxLoan, minDownPayment, pricePerM2, valuationPerM2,
     taxes, stampLoan, bankUpfront, assignmentImt, upfront, upfrontTotal, youngSavings, registryDiscount,
-    investmentsTax, available, cashNeeded, cashLeft, availableForDownPayment, investmentsLeft, otherAtDeed,
+    investmentsTax, available, cashNeeded, deedCash, homeCosts, cashLeft, availableForDownPayment, investmentsLeft, otherAtDeed,
   } = cashFigures(inp);
   const other = summarizeOtherCapital(inp.otherCapital ?? [], inp.deedDate);
 
@@ -276,6 +279,8 @@ function computeWith(inp: Inputs) {
     available,
     investmentsTax,
     cashNeeded,
+    deedCash,
+    homeCosts,
     cashLeft,
     availableForDownPayment,
     investmentsLeft,
