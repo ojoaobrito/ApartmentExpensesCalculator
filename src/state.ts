@@ -159,7 +159,7 @@ export const defaultInputs = (): Inputs => ({
   homeInsuranceAnnual: DEFAULTS.homeInsuranceAnnual,
   monthlyBankFee: DEFAULTS.monthlyBankFee,
 
-  netMonthlyIncome: 3_300,
+  netMonthlyIncome: 4_300,
   otherDebtMonthly: 0,
 
   livingCostsEnabled: true,
@@ -246,6 +246,7 @@ function once(id: string) {
 const LIVING_ON_DONE = once('living-on');
 const FURNISHING_10K_DONE = once('furnishing-10k');
 const LISTING_T2_DONE = once('listing-remax-t2');
+const SALARY_4300_DONE = once('salary-4300');
 
 function migrate(p: Partial<Inputs>): Partial<Inputs> {
   const out = { ...p };
@@ -257,6 +258,8 @@ function migrate(p: Partial<Inputs>): Partial<Inputs> {
   // Recheio e obras do dono passou a 10 000 € (uma vez só)
   if (!FURNISHING_10K_DONE && out.useFinanceData) out.furnishing = 10_000;
   // Novo alvo: T2 da RE/MAX a 255 000 € (uma vez só, no browser do dono)
+  // Salário líquido do dono passou a 4300 € (uma vez só)
+  if (!SALARY_4300_DONE && out.useFinanceData) out.netMonthlyIncome = 4_300;
   if (!LISTING_T2_DONE && out.useFinanceData) Object.assign(out, { price: LISTING.price, listingUrl: LISTING.url, areaM2: LISTING.areaM2 });
   return out;
 }
