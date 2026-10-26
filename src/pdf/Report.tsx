@@ -450,7 +450,7 @@ export function Report({ inputs: i, model: m, scenarios, generatedAt }: { inputs
             <KV label="Amortizações" value={i.amortMode === 'prazo' ? 'Reduzir prazo' : 'Reduzir prestação'} note={planDescription(i, m)} />
             <KV label="Comissão amortização" value={`${pct(i.feeVariablePct, 1)} variável · ${pct(i.feeFixedPct, 1)} fixa`} note={i.feeVariableWaived ? 'Simulada como suspensa na variável' : '+ 4% de Imposto do Selo'} />
             <KV label="Seguro de vida / multirriscos" value={`${pct(i.lifeInsurancePct)}/ano · ${eur(i.homeInsuranceAnnual)}/ano`} />
-            <KV label="Rendimento líquido" value={i.netMonthlyIncome ? `${eur(i.netMonthlyIncome)}/mês` : '-'} />
+            <KV label="Rendimento líquido" value={i.netMonthlyIncome ? `${eur(i.netMonthlyIncome)}/mês${i.subsidiosDuodecimos ? '' : ` (14×, média ${eur(m.incomeMonthly)})`}` : '-'} />
           </View>
         </View>
 
@@ -487,7 +487,7 @@ export function Report({ inputs: i, model: m, scenarios, generatedAt }: { inputs
               <>
                 <View style={{ height: 8 }} />
                 <Text style={S.h3}>{t('Orçamento do mês')}</Text>
-                <KV label="Rendimento líquido" value={eurC(i.netMonthlyIncome)} />
+                <KV label={i.subsidiosDuodecimos ? 'Rendimento líquido' : 'Rendimento líquido (média 14×)'} value={eurC(m.incomeMonthly)} />
                 <KV label="- Casa e amortizações" value={`-${eurC(totalMonthly + i.otherDebtMonthly)}`} />
                 <KV label="- Despesas do dia a dia" value={`-${eurC(m.living.expensesMonthly)}`} note={m.living.byCategory.map((c) => `${c.category} ${eur(c.monthly)}`).join(' · ')} />
                 <KV total label="Sobra antes de investir" value={eurC(m.spareAfterLiving)} />

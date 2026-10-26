@@ -79,7 +79,11 @@ export interface Inputs {
   monthlyBankFee: number;
 
   // Rendimento
-  netMonthlyIncome: number;
+  netMonthlyIncome: number; // salário líquido de um mês normal
+  /** Subsídios de férias e de Natal já incluídos no salário (duodécimos, 12×); senão, pagos à parte (14×) */
+  subsidiosDuodecimos: boolean;
+  subsidioFeriasMonth: number; // 1–12
+  subsidioNatalMonth: number; // 1–12
   otherDebtMonthly: number;
 
   // Despesas do dia a dia (opcional)
@@ -160,6 +164,9 @@ export const defaultInputs = (): Inputs => ({
   monthlyBankFee: DEFAULTS.monthlyBankFee,
 
   netMonthlyIncome: 4_500,
+  subsidiosDuodecimos: false,
+  subsidioFeriasMonth: 6,
+  subsidioNatalMonth: 12,
   otherDebtMonthly: 0,
 
   livingCostsEnabled: true,

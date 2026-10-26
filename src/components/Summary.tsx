@@ -185,7 +185,7 @@ export function Kpis({ m, i, noOther }: { m: Model; i: Inputs; noOther?: Model |
           rows={
             i.netMonthlyIncome > 0
               ? [
-                  { label: 'Rendimento', value: `${eur(i.netMonthlyIncome)}/mês` },
+                  { label: i.subsidiosDuodecimos ? 'Rendimento' : 'Rendimento (média 14×)', value: `${eur(m.incomeMonthly)}/mês` },
                   { label: `Stress test +${m.stressPp.toFixed(1).replace('.', ',')} p.p.`, value: pct(m.dstiStress, 1), tone: m.dstiStress > RULES.dstiLimit ? 'bad' : undefined },
                   { label: 'Limite BdP', value: `${RULES.dstiLimit}%` },
                   m.extraMonthlyEquivalent > 0 && { label: 'Com amortizações', value: pct(m.effortTotal, 1) },
@@ -421,8 +421,11 @@ function BudgetTable({ m, i }: { m: Model; i: Inputs }) {
       <table className="kv">
         <tbody>
           <tr>
-            <td>Rendimento líquido</td>
-            <td>{eurC(i.netMonthlyIncome)}</td>
+            <td>
+              Rendimento líquido
+              {!i.subsidiosDuodecimos && <span className="note">Média com os subsídios: {eurC(i.netMonthlyIncome)} × 14 ÷ 12</span>}
+            </td>
+            <td>{eurC(m.incomeMonthly)}</td>
           </tr>
           <tr>
             <td>

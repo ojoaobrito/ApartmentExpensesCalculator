@@ -91,7 +91,7 @@ describe('custos da compra editáveis', () => {
 
 describe('esforço total', () => {
   it('classifica pelo peso da casa + amortizações no rendimento e avisa quando não cabe', () => {
-    const i = defaultInputs();
+    const i = { ...defaultInputs(), price: 230_000, netMonthlyIncome: 3_300, subsidiosDuodecimos: true, otherCapital: [] };
     const total = (m: ReturnType<typeof compute>) => m.monthlyTotal + m.extraMonthlyEquivalent;
     const m = compute({ ...i, targetYears: 3 });
     expect(m.effortStatus).toBe('impossible');
@@ -156,5 +156,19 @@ describe('dinheiro na escritura', () => {
     expect(m.homeCosts).toBe(7_000);
     expect(m.deedCash).toBeCloseTo(m.cashNeeded - 7_000, 6);
     expect(m.cashLeft).toBeCloseTo(m.available - m.cashNeeded, 6);
+  });
+});
+
+describe('subsídios de férias e de Natal', () => {
+  it('pagos à parte contam 14 salários por ano; em duodécimos o salário já os inclui', () => {
+    const i = { ...defaultInputs(), netMonthlyIncome: 3_000 };
+    const apart = compute({ ...i, subsidiosDuodecimos: false });
+    const duo = compute({ ...i, subsidiosDuodecimos: true });
+    expect(apart.incomeMonthly).toBeCloseTo(3_500, 6);
+    expect(apart.subsidies).toBe(3_000);
+    expect(duo.incomeMonthly).toBe(3_000);
+    expect(duo.subsidies).toBe(0);
+    expect(apart.monthlySpare - duo.monthlySpare).toBeCloseTo(500, 6);
+    expect(apart.dsti).toBeLessThan(duo.dsti);
   });
 });

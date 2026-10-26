@@ -183,12 +183,15 @@ function computeWith(inp: Inputs) {
             inp.rateType === 'mista' ? (first?.payment ?? 0) : 0,
             pmt((variableTanNow + stressPp) / 1200, inp.termYears * 12, principal),
           );
-  const dsti = inp.netMonthlyIncome > 0 ? ((first?.payment ?? 0) + inp.otherDebtMonthly) / inp.netMonthlyIncome * 100 : 0;
-  const dstiStress = inp.netMonthlyIncome > 0 ? (stressedPayment + inp.otherDebtMonthly) / inp.netMonthlyIncome * 100 : 0;
+  // Rendimento médio por mês: com os subsídios pagos à parte, o ano tem 14 salários
+  const subsidies = inp.subsidiosDuodecimos ? 0 : inp.netMonthlyIncome;
+  const incomeMonthly = inp.subsidiosDuodecimos ? inp.netMonthlyIncome : (inp.netMonthlyIncome * 14) / 12;
+  const dsti = inp.netMonthlyIncome > 0 ? ((first?.payment ?? 0) + inp.otherDebtMonthly) / incomeMonthly * 100 : 0;
+  const dstiStress = inp.netMonthlyIncome > 0 ? (stressedPayment + inp.otherDebtMonthly) / incomeMonthly * 100 : 0;
   const effortTotal =
-    inp.netMonthlyIncome > 0 ? (monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly) / inp.netMonthlyIncome * 100 : 0;
+    inp.netMonthlyIncome > 0 ? (monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly) / incomeMonthly * 100 : 0;
   // Quanto sobra por mês depois da casa, das amortizações e de outras dívidas
-  const monthlySpare = inp.netMonthlyIncome - (monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly);
+  const monthlySpare = incomeMonthly - (monthlyTotal + extraMonthlyEquivalent + inp.otherDebtMonthly);
 
   // Despesas do dia a dia (opcional): o que sobra mesmo do salário depois de tudo
   const living = inp.livingCostsEnabled ? summarizeLivingCosts(inp.livingCosts) : null;
@@ -303,6 +306,11 @@ function computeWith(inp: Inputs) {
     effortTotal,
     effortStatus,
     monthlySpare,
+    incomeMonthly,
+    /** Valor de cada subsídio (férias e Natal) quando pagos à parte; 0 em duodécimos */
+    subsidies,
+    /** Quanto a média mensal fica acima de um mês sem subsídio */
+    subsidyBoost: incomeMonthly - inp.netMonthlyIncome,
     living,
     spareAfterLiving,
     spareAfterAll,

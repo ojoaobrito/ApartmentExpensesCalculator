@@ -8,6 +8,7 @@ import { Check, InlineNumber, NumberField, Section, Segmented, SelectField, Sour
 import { NumberInput } from './NumberInput';
 import { useScrollFade } from './useScrollFade';
 import { LivingCostsSection } from './LivingCostsSection';
+import { MONTHS_PT } from '../data/livingCosts';
 import { OtherCapitalSection } from './OtherCapitalSection';
 import { SortableList } from './sortable';
 import { useSectionOrder } from '../sectionOrder';
@@ -325,17 +326,58 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
           badge={i.netMonthlyIncome > 0 ? <span className={`pill ${EFFORT_PILL[m.effortStatus]}`} title="Esforço total: casa + amortizações + outras dívidas">{m.effortTotal.toFixed(0)}% do rendimento</span> : undefined}
         >
           <div className="row2">
-            <NumberField label="Rendimento líquido" value={i.netMonthlyIncome} onChange={(v) => set('netMonthlyIncome', v)} suffix="€/mês" step={100} min={0} />
+            <NumberField label="Salário líquido" value={i.netMonthlyIncome} onChange={(v) => set('netMonthlyIncome', v)} suffix="€/mês" step={100} min={0} />
             <NumberField label="Outras dívidas" value={i.otherDebtMonthly} onChange={(v) => set('otherDebtMonthly', v)} suffix="€/mês" step={25} min={0} />
           </div>
+          <Segmented
+            value={i.subsidiosDuodecimos ? 'duo' : 'apart'}
+            options={[
+              { value: 'apart', label: 'Subsídios à parte (14×)' },
+              { value: 'duo', label: 'Em duodécimos (12×)' },
+            ]}
+            onChange={(v) => set('subsidiosDuodecimos', v === 'duo')}
+          />
+          {i.netMonthlyIncome > 0 &&
+            (i.subsidiosDuodecimos ? (
+              <span className="hint">Os subsídios de férias e de Natal já vêm divididos pelos 12 salários: o salário acima já os inclui.</span>
+            ) : (
+              <div className="subsidy-box">
+                {(
+                  [
+                    ['Subsídio de férias', 'subsidioFeriasMonth'],
+                    ['Subsídio de Natal', 'subsidioNatalMonth'],
+                  ] as const
+                ).map(([label, key]) => (
+                  <div key={key} className="subsidy-row">
+                    <span>{label}</span>
+                    <select className="subsidy-month" value={i[key]} onChange={(e) => set(key, Number(e.target.value))} aria-label={`Mês do ${label.toLowerCase()}`}>
+                      {MONTHS_PT.map((mo, k) => (
+                        <option key={mo} value={k + 1}>
+                          {mo}
+                        </option>
+                      ))}
+                    </select>
+                    <b>+{eur(m.subsidies)}</b>
+                  </div>
+                ))}
+                <div className="subsidy-row total">
+                  <span>Rendimento médio (14 ÷ 12)</span>
+                  <b>{eur(m.incomeMonthly)}/mês</b>
+                </div>
+              </div>
+            ))}
           {i.netMonthlyIncome > 0 && (
             <div className="effort-stats">
               <div>
                 <span className="muted small">Esforço total</span>
                 <b className={`effort-${m.effortStatus}`}>{pct(m.effortTotal, 0)}</b>
                 <span className="hint">
-                  Casa + amortizações + dívidas ÷ rendimento. {m.monthlySpare >= 0 ? `Sobram ${eur(m.monthlySpare)}/mês` : `Faltam ${eur(-m.monthlySpare)}/mês`}
+                  Casa + amortizações + dívidas ÷ rendimento médio. {m.monthlySpare >= 0 ? `Sobram ${eur(m.monthlySpare)}/mês` : `Faltam ${eur(-m.monthlySpare)}/mês`}
                   {m.spareAfterLiving !== null ? `; ${m.spareAfterLiving >= 0 ? 'sobram' : 'faltam'} ${eur(Math.abs(m.spareAfterLiving))} depois das despesas do dia a dia.` : '.'}
+                  {m.subsidyBoost > 0 && (() => {
+                    const normal = (m.spareAfterLiving ?? m.monthlySpare) - m.subsidyBoost;
+                    return ` Em média; num mês sem subsídio ${normal >= 0 ? 'sobram' : 'faltam'} ${eur(Math.abs(normal))}.`;
+                  })()}
                 </span>
               </div>
               <div>
@@ -348,7 +390,7 @@ export function InputsPanel({ inputs: i, set, patch, model: m, finance, synced, 
             </div>
           )}
           <span className="hint">
-            Rendimento líquido mensal (média com subsídios: líquido anual ÷ 12). Desde 1/ago/2026 o BdP limita a taxa de esforço a {RULES.dstiLimit}%, calculada com stress test de +{RULES.stressPpForTerm(i.termYears)} p.p. na taxa variável. <SourceLink id="macroprudencial" />
+            O esforço usa o rendimento médio (líquido anual ÷ 12, com os subsídios). Desde 1/ago/2026 o BdP limita a taxa de esforço a {RULES.dstiLimit}%, calculada com stress test de +{RULES.stressPpForTerm(i.termYears)} p.p. na taxa variável. <SourceLink id="macroprudencial" />
           </span>
         </Section>
     ),
